@@ -4,6 +4,7 @@
 %global gcc_target x86_64-redhat-linux
 %global debug_package %{nil}
 %global __provides_exclude_from ^%{toolset_root}/.*$
+%global __requires_exclude ^lib(atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|quadmath|ssp|stdc\\+\\+)\\.so
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
@@ -17,6 +18,7 @@ Patch0:         gcc12-libstdc++-compat.patch
 BuildRequires:  gcc, gcc-c++, make
 BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, zlib-devel
 BuildRequires:  flex, bison, texinfo, gettext, binutils
+BuildRequires:  /usr/bin/python
 BuildRequires:  gcc12-toolset-runtime, gcc12-toolset-binutils
 Requires:       gcc12-toolset-runtime
 Requires:       gcc12-toolset-binutils
@@ -197,6 +199,20 @@ install -m 0755 %{SOURCE1} "$compat_profile/bin/g++"
 ln -s g++ "$compat_profile/bin/c++"
 ln -s g++ "$compat_profile/bin/%{gcc_target}-g++"
 ln -s g++ "$compat_profile/bin/%{gcc_target}-c++"
+
+# Compile the GDB pretty-printers before enumerating the package manifests.
+# CentOS 7's BRP script performs this after %%install, which would otherwise
+# create unowned bytecode after the manifests have already been generated.
+find %{buildroot}%{toolset_prefix} -type f -name '*.py' -print \
+  | while IFS= read -r python_file; do
+      installed_path=${python_file#%{buildroot}}
+      PYTHON_FILE="$python_file" INSTALLED_PATH="$installed_path" \
+        /usr/bin/python -c \
+          'import os, py_compile; py_compile.compile(os.environ["PYTHON_FILE"], dfile=os.environ["INSTALLED_PATH"], doraise=True)'
+      PYTHON_FILE="$python_file" INSTALLED_PATH="$installed_path" \
+        /usr/bin/python -O -c \
+          'import os, py_compile; py_compile.compile(os.environ["PYTHON_FILE"], dfile=os.environ["INSTALLED_PATH"], doraise=True)'
+    done
 
 # Build non-overlapping file manifests. Directory ownership belongs to runtime.
 find %{buildroot}/opt/gcc12-toolset \( -type f -o -type l \) \
