@@ -1,9 +1,7 @@
 FROM centos:7
 
 ARG BUILD_JOBS=8
-ENV BUILD_JOBS=${BUILD_JOBS} \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+ENV BUILD_JOBS=${BUILD_JOBS}
 
 RUN set -eux; \
     sed -ri 's!^mirrorlist=!#mirrorlist=!; s!^#baseurl=http://mirror.centos.org/centos/\$releasever!baseurl=https://vault.centos.org/7.9.2009!' /etc/yum.repos.d/CentOS-Base.repo; \
@@ -12,13 +10,17 @@ RUN set -eux; \
     yum -y install \
       rpm-build rpmdevtools redhat-rpm-config \
       gcc gcc-c++ make binutils \
-      glibc-devel libstdc++-devel \
+      glibc-common glibc-devel libstdc++-devel \
       gmp-devel mpfr-devel libmpc-devel zlib-devel \
       bison flex texinfo gettext dejagnu expect \
       perl python3 patch diffutils file findutils which \
       curl ca-certificates tar gzip bzip2 xz; \
+    locale -a | grep -qi '^en_US\.utf8$'; \
     yum clean all; \
     rm -rf /var/cache/yum
+
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
 
 COPY . /workspace
 RUN chmod +x /workspace/*.sh /workspace/rpm/SOURCES/* /workspace/tests/*.sh

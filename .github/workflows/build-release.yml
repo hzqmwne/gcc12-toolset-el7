@@ -80,6 +80,9 @@ jobs:
           path: cache
           key: sources-${{ hashFiles('sources.lock.sh') }}
 
+      - name: Fetch and verify locked sources
+        run: bash ./fetch-sources.sh cache
+
       - name: Build RPMs
         run: |
           set -o pipefail
