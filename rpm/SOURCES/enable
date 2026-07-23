@@ -2,6 +2,8 @@
 # Usage: source /opt/gcc12-toolset/enable [full|compat]
 
 _gcc12_root=/opt/gcc12-toolset/root/usr
+_gcc12_common_lib=$_gcc12_root/lib64/binutils
+_gcc12_full_lib=$_gcc12_root/lib64
 _gcc12_profile=${1:-${GCC12_TOOLSET_PROFILE:-full}}
 case "$_gcc12_profile" in
     private) _gcc12_profile=full ;;
@@ -48,18 +50,24 @@ _gcc12_remove_path() {
 
 _gcc12_profile_bin=/opt/gcc12-toolset/profiles/compat/bin
 _gcc12_remove_path PATH "$_gcc12_profile_bin"
-_gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_root/lib64"
-_gcc12_remove_path LIBRARY_PATH "$_gcc12_root/lib64"
+_gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_common_lib"
+_gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_full_lib"
+_gcc12_remove_path LIBRARY_PATH "$_gcc12_full_lib"
+_gcc12_remove_path PKG_CONFIG_PATH "$_gcc12_common_lib/pkgconfig"
+_gcc12_remove_path PKG_CONFIG_PATH "$_gcc12_full_lib/pkgconfig"
+_gcc12_remove_path CMAKE_PREFIX_PATH "$_gcc12_root"
 _gcc12_prepend_path PATH "$_gcc12_root/bin"
 _gcc12_prepend_path MANPATH "$_gcc12_root/share/man"
 _gcc12_prepend_path INFOPATH "$_gcc12_root/share/info"
-_gcc12_prepend_path PKG_CONFIG_PATH "$_gcc12_root/lib64/pkgconfig"
-_gcc12_prepend_path CMAKE_PREFIX_PATH "$_gcc12_root"
+_gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_common_lib"
+_gcc12_prepend_path PKG_CONFIG_PATH "$_gcc12_common_lib/pkgconfig"
 
 case "$_gcc12_profile" in
     full)
-        _gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_root/lib64"
-        _gcc12_prepend_path LIBRARY_PATH "$_gcc12_root/lib64"
+        _gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_full_lib"
+        _gcc12_prepend_path LIBRARY_PATH "$_gcc12_full_lib"
+        _gcc12_prepend_path PKG_CONFIG_PATH "$_gcc12_full_lib/pkgconfig"
+        _gcc12_prepend_path CMAKE_PREFIX_PATH "$_gcc12_root"
         CC="$_gcc12_root/bin/gcc"
         CXX="$_gcc12_root/bin/g++"
         ;;
@@ -83,6 +91,7 @@ GCC12_TOOLSET_PROFILE=$_gcc12_profile
 GCC12_TOOLSET_RUNTIME=$_gcc12_profile
 export GCC12_TOOLSET_ROOT GCC12_TOOLSET_PROFILE GCC12_TOOLSET_RUNTIME CC CXX
 
-unset _gcc12_root _gcc12_profile _gcc12_profile_bin
+unset _gcc12_root _gcc12_common_lib _gcc12_full_lib
+unset _gcc12_profile _gcc12_profile_bin
 unset _gcc12_var _gcc12_value _gcc12_old _gcc12_new _gcc12_ifs _gcc12_item
 unset -f _gcc12_prepend_path _gcc12_remove_path 2>/dev/null || true

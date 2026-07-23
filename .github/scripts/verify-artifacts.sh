@@ -13,6 +13,7 @@ docker run --rm \
     -c '
         set -euo pipefail
         yum -y localinstall /out/RPMS/*.rpm
+        /workspace/tests/check-rpm-isolation.sh
         /workspace/tests/check-abi.sh
         /workspace/tests/smoke-profiles.sh
         /workspace/tests/smoke-runtime.sh

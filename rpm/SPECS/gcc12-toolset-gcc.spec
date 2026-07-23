@@ -1,5 +1,6 @@
 %global toolset_root /opt/gcc12-toolset/root
 %global toolset_prefix %{toolset_root}/usr
+%global binutils_libdir %{toolset_prefix}/lib64/binutils
 %global gcc_target x86_64-redhat-linux
 %global debug_package %{nil}
 %global __provides_exclude_from ^%{toolset_root}/.*$
@@ -90,6 +91,7 @@ cd ../gcc-12.2.1-20221121
 %build
 export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
 unset LD_LIBRARY_PATH LIBRARY_PATH CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH
+export LD_LIBRARY_PATH=%{binutils_libdir}
 mkdir obj
 cd obj
 ../configure \
@@ -156,6 +158,8 @@ cd obj-compat
 make %{?_smp_mflags} all-gcc all-target-libgcc all-target-libstdc++-v3
 
 %install
+export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
+export LD_LIBRARY_PATH=%{binutils_libdir}
 cd obj
 make DESTDIR=%{buildroot} install
 find %{buildroot}%{toolset_prefix} -name '*.la' -delete
@@ -231,6 +235,8 @@ test -s files.static
 test -s files.compat
 
 %check
+export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
+export LD_LIBRARY_PATH=%{binutils_libdir}
 test -x obj/gcc/xgcc
 obj/gcc/xgcc -Bobj/gcc -dumpfullversion | grep '^12\.2\.1$'
 config_header=$(find %{buildroot}%{toolset_prefix}/include/c++/%{version} -name c++config.h | head -n 1)

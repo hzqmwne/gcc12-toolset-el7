@@ -1,7 +1,9 @@
 %global toolset_root /opt/gcc12-toolset/root
 %global toolset_prefix %{toolset_root}/usr
+%global binutils_libdir %{toolset_prefix}/lib64/binutils
 %global debug_package %{nil}
 %global __provides_exclude_from ^%{toolset_root}/.*$
+%global __requires_exclude ^lib(bfd|opcodes|ctf|ctf-nobfd)(-[0-9.]+)?\\.so
 
 Name:           gcc12-toolset-binutils
 Version:        2.36.1
@@ -23,16 +25,16 @@ CentOS 7 system binutils.
 %build
 mkdir build
 cd build
-# The compat profile deliberately excludes the private lib64 directory from
-# LD_LIBRARY_PATH. Link binutils to its internal libraries statically so tools
-# such as ld remain usable in both profiles without exposing private runtimes.
+# Keep the shared binutils runtime separate from the full GCC runtime. Both
+# profiles expose this directory without making the private libstdc++ visible
+# to the compatibility profile.
 ../configure \
   --prefix=%{toolset_prefix} \
-  --libdir=%{toolset_prefix}/lib64 \
+  --libdir=%{binutils_libdir} \
   --build=%{_target_platform} \
   --host=%{_target_platform} \
   --target=%{_target_platform} \
-  --disable-shared \
+  --enable-shared \
   --enable-plugins \
   --enable-threads \
   --enable-deterministic-archives \
@@ -48,12 +50,14 @@ find %{buildroot}%{toolset_prefix} -name '*.la' -delete
 rm -f %{buildroot}%{toolset_prefix}/share/info/dir
 
 %check
-%{buildroot}%{toolset_prefix}/bin/ld --version | grep '2.36.1'
+test -r %{buildroot}%{binutils_libdir}/libbfd-%{version}.so
+LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
+  %{buildroot}%{toolset_prefix}/bin/ld --version | grep '2.36.1'
 
 %files
 %{toolset_prefix}/bin/*
 %{toolset_prefix}/lib/*
-%{toolset_prefix}/lib64/*
+%{binutils_libdir}
 %{toolset_prefix}/include/*
 %{toolset_prefix}/share/info/*
 %{toolset_prefix}/share/man/man1/*

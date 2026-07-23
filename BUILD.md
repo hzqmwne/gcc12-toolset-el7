@@ -135,6 +135,13 @@ echo "$GCC12_TOOLSET_PROFILE $CXX"
 
 ## 6. 基本验收
 
+先确认私有 soname 没有泄漏为系统 RPM 能力，binutils 的内部共享库依赖也没有
+变成无法满足的外部依赖：
+
+```bash
+./tests/check-rpm-isolation.sh
+```
+
 ### 6.1 dual ABI
 
 ```bash
@@ -261,10 +268,14 @@ C++11、ABI 1、CentOS 7 通用 CPU：
 私有库全部位于：
 
 ```text
-/opt/gcc12-toolset/root/usr/lib64
+/opt/gcc12-toolset/root/usr/lib64/
+    完整 GCC 12 libgcc/libstdc++，仅 full profile 可见
+
+/opt/gcc12-toolset/root/usr/lib64/binutils/
+    共享 libbfd/libopcodes 等，full/compat 共用
 ```
 
-spec 使用 RPM provides 过滤，避免私有 `libstdc++.so.6` 被误认为可满足系统包的运行时依赖。启动器只在子进程或当前显式 source 的 shell 中修改环境。
+spec 使用 RPM provides 过滤，避免私有 `libstdc++.so.6` 被误认为可满足系统包的运行时依赖。与官方 SCL 类似，启动器只在子进程或当前显式 source 的 shell 中修改环境；独立的 binutils 运行库目录始终启用，完整 GCC 运行库目录只在 `full` profile 中启用。
 
 包拆分允许只安装运行时：
 

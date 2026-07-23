@@ -7,6 +7,7 @@
 - 安装前缀：`/opt/gcc12-toolset/root/usr`；
 - 不覆盖 `/usr/bin/gcc`、`/usr/bin/ld` 或 `/usr/lib64/libstdc++.so.6`；
 - GCC 12.2.1 与 binutils 2.36.1 只安装一份；
+- binutils 共享运行库位于独立的 common 目录，由两个 profile 共用；
 - `full`：完整 `libstdc++.so.6.0.30`、`libstdc++.a`、dual ABI、默认 ABI 1；
 - `compat`：DTS 12 patched headers、dual ABI 关闭、系统 `libstdc++.so.6` 和 `libstdc++_nonshared.a`；
 - 支持 `-static-libstdc++`；
@@ -139,7 +140,11 @@ gcc12-toolset-full g++ \
 - 全局写入 `LD_LIBRARY_PATH`；
 - 将私有库作为系统 RPM 依赖的替代品公开。
 
-私有动态运行库只在 `full` profile 中通过 `LD_LIBRARY_PATH` 可见；`compat` profile 明确移除该路径并链接系统库。静态链接 C++ 运行库的最终程序不依赖该环境。
+共享 binutils 运行库位于 `/opt/gcc12-toolset/root/usr/lib64/binutils`，两个
+profile 都会像 SCL 一样通过 `LD_LIBRARY_PATH` 启用它。完整 GCC 12
+`libgcc`/`libstdc++` 仍位于上一级 `lib64`，只对 `full` profile 可见；
+`compat` profile 明确移除该路径并链接系统 C++ 运行库。静态链接 C++ 运行库
+的最终程序不依赖该环境。
 
 ## 当前状态
 

@@ -4,12 +4,18 @@ set -euo pipefail
 source /opt/gcc12-toolset/enable full
 [[ $GCC12_TOOLSET_PROFILE == full ]]
 [[ $CXX == /opt/gcc12-toolset/root/usr/bin/g++ ]]
+[[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
+[[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64:* ]]
 "$CXX" --version | grep -q '12\.2\.1'
+ld --version | grep -q '2\.36\.1'
 
 source /opt/gcc12-toolset/enable compat
 [[ $GCC12_TOOLSET_PROFILE == compat ]]
 [[ $CXX == /opt/gcc12-toolset/profiles/compat/bin/g++ ]]
 [[ $(command -v g++) == /opt/gcc12-toolset/profiles/compat/bin/g++ ]]
+[[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
+[[ :$LD_LIBRARY_PATH: != *:/opt/gcc12-toolset/root/usr/lib64:* ]]
+ld --version | grep -q '2\.36\.1'
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -27,6 +33,10 @@ g++ -std=c++11 "$work/probe.cc" -o "$work/compat"
 "$work/compat"
 
 readelf -d "$work/compat" | grep -q 'libstdc++.so.6'
+if ldd "$work/compat" | grep -q '/opt/gcc12-toolset/root/usr/lib64/libstdc++.so.6'; then
+    printf 'compat probe loaded the full private libstdc++ runtime\n' >&2
+    exit 1
+fi
 bad_glibcxx=$(readelf --version-info "$work/compat" | grep -oE 'GLIBCXX_[0-9.]+' \
     | sort -Vu | while read -r symbol; do
         version=${symbol#GLIBCXX_}
