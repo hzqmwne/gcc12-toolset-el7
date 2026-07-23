@@ -1,0 +1,2 @@
+# Backward-compatible alias for the full profile.
+source /opt/gcc12-toolset/enable full

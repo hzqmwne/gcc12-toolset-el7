@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -e
+
+profile=full
+invocation=$(basename "$0")
+case "$invocation" in
+    gcc12-toolset-full) profile=full ;;
+    gcc12-toolset-compat) profile=compat ;;
+esac
+
+while (($#)); do
+    case "$1" in
+        --profile=full|--runtime=private) profile=full; shift ;;
+        --profile=compat|--runtime=system) profile=compat; shift ;;
+        --help|-h)
+            cat <<'EOF'
+Usage: gcc12-toolset [--profile=full|compat] [COMMAND [ARG...]]
+       gcc12-toolset-full [COMMAND [ARG...]]
+       gcc12-toolset-compat [COMMAND [ARG...]]
+
+full    Complete GCC 12 libstdc++, dual ABI, new C++11 ABI by default.
+compat  DTS-style headers and libstdc++_nonshared linked with the CentOS 7
+        system libstdc++.so.6; dual ABI is disabled and old ABI is enforced.
+
+To modify the current shell instead of starting a child process:
+  source /opt/gcc12-toolset/enable full
+  source /opt/gcc12-toolset/enable compat
+EOF
+            exit 0
+            ;;
+        --) shift; break ;;
+        -*) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
+        *) break ;;
+    esac
+done
+
+if (($# == 0)); then
+    set -- bash
+fi
+
+export GCC12_TOOLSET_PROFILE=$profile
+exec bash -c 'source /opt/gcc12-toolset/enable "$GCC12_TOOLSET_PROFILE"; exec "$@"' gcc12-toolset "$@"

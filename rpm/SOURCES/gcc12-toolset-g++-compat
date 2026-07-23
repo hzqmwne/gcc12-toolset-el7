@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -e
+
+root=/opt/gcc12-toolset/root/usr
+profile=/opt/gcc12-toolset/profiles/compat
+version=12.2.1
+target=x86_64-redhat-linux
+
+exec "$root/bin/g++" \
+    -nostdinc++ \
+    -isystem "$profile/include/c++/$version" \
+    -isystem "$profile/include/c++/$version/$target" \
+    -isystem "$profile/include/c++/$version/backward" \
+    -B"$profile/lib/gcc/$target/$version/" \
+    -L"$profile/lib/gcc/$target/$version" \
+    -D_GLIBCXX_USE_CXX11_ABI=0 \
+    "$@"

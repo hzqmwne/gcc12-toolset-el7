@@ -1,0 +1,88 @@
+# Source this file to enable gcc12-toolset in the current shell.
+# Usage: source /opt/gcc12-toolset/enable [full|compat]
+
+_gcc12_root=/opt/gcc12-toolset/root/usr
+_gcc12_profile=${1:-${GCC12_TOOLSET_PROFILE:-full}}
+case "$_gcc12_profile" in
+    private) _gcc12_profile=full ;;
+    system) _gcc12_profile=compat ;;
+esac
+
+_gcc12_prepend_path() {
+    _gcc12_var=$1
+    _gcc12_value=$2
+    eval "_gcc12_old=\${$_gcc12_var-}"
+    case ":$_gcc12_old:" in
+        *":$_gcc12_value:"*) ;;
+        *)
+            if [ -n "$_gcc12_old" ]; then
+                eval "$_gcc12_var=\"$_gcc12_value:\$_gcc12_old\""
+            else
+                eval "$_gcc12_var=\"$_gcc12_value\""
+            fi
+            ;;
+    esac
+    export "$_gcc12_var"
+}
+
+_gcc12_remove_path() {
+    _gcc12_var=$1
+    _gcc12_value=$2
+    eval "_gcc12_old=\${$_gcc12_var-}"
+    _gcc12_new=
+    _gcc12_ifs=$IFS
+    IFS=:
+    for _gcc12_item in $_gcc12_old; do
+        if [ -n "$_gcc12_item" ] && [ "$_gcc12_item" != "$_gcc12_value" ]; then
+            if [ -n "$_gcc12_new" ]; then
+                _gcc12_new="$_gcc12_new:$_gcc12_item"
+            else
+                _gcc12_new=$_gcc12_item
+            fi
+        fi
+    done
+    IFS=$_gcc12_ifs
+    eval "$_gcc12_var=\"$_gcc12_new\""
+    export "$_gcc12_var"
+}
+
+_gcc12_profile_bin=/opt/gcc12-toolset/profiles/compat/bin
+_gcc12_remove_path PATH "$_gcc12_profile_bin"
+_gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_root/lib64"
+_gcc12_remove_path LIBRARY_PATH "$_gcc12_root/lib64"
+_gcc12_prepend_path PATH "$_gcc12_root/bin"
+_gcc12_prepend_path MANPATH "$_gcc12_root/share/man"
+_gcc12_prepend_path INFOPATH "$_gcc12_root/share/info"
+_gcc12_prepend_path PKG_CONFIG_PATH "$_gcc12_root/lib64/pkgconfig"
+_gcc12_prepend_path CMAKE_PREFIX_PATH "$_gcc12_root"
+
+case "$_gcc12_profile" in
+    full)
+        _gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_root/lib64"
+        _gcc12_prepend_path LIBRARY_PATH "$_gcc12_root/lib64"
+        CC="$_gcc12_root/bin/gcc"
+        CXX="$_gcc12_root/bin/g++"
+        ;;
+    compat)
+        if [ ! -x "$_gcc12_profile_bin/g++" ]; then
+            printf 'gcc12-toolset: compat profile is not installed\n' >&2
+            return 1 2>/dev/null || exit 1
+        fi
+        _gcc12_prepend_path PATH "$_gcc12_profile_bin"
+        CC="$_gcc12_root/bin/gcc"
+        CXX="$_gcc12_profile_bin/g++"
+        ;;
+    *)
+        printf 'gcc12-toolset: invalid profile: %s (expected full or compat)\n' "$_gcc12_profile" >&2
+        return 2 2>/dev/null || exit 2
+        ;;
+esac
+
+GCC12_TOOLSET_ROOT=$_gcc12_root
+GCC12_TOOLSET_PROFILE=$_gcc12_profile
+GCC12_TOOLSET_RUNTIME=$_gcc12_profile
+export GCC12_TOOLSET_ROOT GCC12_TOOLSET_PROFILE GCC12_TOOLSET_RUNTIME CC CXX
+
+unset _gcc12_root _gcc12_profile _gcc12_profile_bin
+unset _gcc12_var _gcc12_value _gcc12_old _gcc12_new _gcc12_ifs _gcc12_item
+unset -f _gcc12_prepend_path _gcc12_remove_path 2>/dev/null || true

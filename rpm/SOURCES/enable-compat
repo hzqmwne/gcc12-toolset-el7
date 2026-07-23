@@ -1,0 +1,2 @@
+# Enable the RHEL 7 system-libstdc++ compatibility profile in this shell.
+source /opt/gcc12-toolset/enable compat

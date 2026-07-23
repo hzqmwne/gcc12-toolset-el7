@@ -1,0 +1,2 @@
+# Enable the complete GCC 12 dual-ABI runtime in the current shell.
+source /opt/gcc12-toolset/enable full

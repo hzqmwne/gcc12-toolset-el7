@@ -1,0 +1,174 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: GCC build parallelism
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "4"
+      trace:
+        description: Enable host-side bash tracing
+        required: true
+        default: false
+        type: boolean
+      free_disk:
+        description: Remove unused runner SDKs before building
+        required: true
+        default: true
+        type: boolean
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: toolchain-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify RPMs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+
+    env:
+      BUILD_JOBS: ${{ inputs.jobs || '2' }}
+      BUILDKIT_PROGRESS: plain
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release metadata and repository
+        run: python3 .github/scripts/check-repository.py
+
+      - name: Record initial runner state
+        run: |
+          mkdir -p out/ci
+          df -h > out/ci/disk-before.txt
+          free -h > out/ci/memory-before.txt
+          docker info > out/ci/docker-info.txt
+
+      - name: Free disk space
+        if: ${{ github.event_name == 'push' || inputs.free_disk }}
+        run: |
+          sudo rm -rf \
+            /opt/hostedtoolcache/CodeQL \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/share/dotnet
+          docker system prune --all --force
+          df -h
+
+      - name: Restore source cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: cache
+          key: sources-${{ hashFiles('sources.lock.sh') }}
+
+      - name: Build RPMs
+        run: |
+          set -o pipefail
+          command=(bash)
+          if [[ '${{ inputs.trace }}' == true ]]; then
+            command+=(-x)
+          fi
+          command+=(./build-rpms.sh --jobs "$BUILD_JOBS" --rebuild-image)
+          "${command[@]}" 2>&1 | tee out/ci/build.log
+
+      - name: Install and verify built RPMs
+        run: |
+          bash .github/scripts/verify-artifacts.sh \
+            gcc12-toolset-rpm-builder:centos7
+
+      - name: Package release archive
+        id: package
+        run: |
+          bash .github/scripts/package-release.sh
+          echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Attest release archive
+        if: ${{ github.event.repository.visibility == 'public' }}
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-path: dist/*.tar.gz
+          subject-version: ${{ steps.package.outputs.version }}
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-${{ github.sha }}
+          path: |
+            dist/*.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Record final runner state
+        if: always()
+        run: |
+          mkdir -p out/ci
+          df -h > out/ci/disk-after.txt
+          free -h > out/ci/memory-after.txt
+          docker system df > out/ci/docker-disk.txt 2>&1 || true
+          docker images --digests > out/ci/docker-images.txt 2>&1 || true
+          du -sh cache out 2>/dev/null > out/ci/workspace-sizes.txt || true
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            out/ci/
+            out/SHA256SUMS.generated
+            out/SHA256SUMS.rpms
+            out/installed-packages.txt
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh run download "$GITHUB_RUN_ID" \
+            --name "release-$GITHUB_SHA" \
+            --dir dist
+
+      - name: Publish immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/release.sh
