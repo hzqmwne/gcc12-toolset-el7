@@ -23,13 +23,16 @@ CentOS 7 system binutils.
 %build
 mkdir build
 cd build
+# The compat profile deliberately excludes the private lib64 directory from
+# LD_LIBRARY_PATH. Link binutils to its internal libraries statically so tools
+# such as ld remain usable in both profiles without exposing private runtimes.
 ../configure \
   --prefix=%{toolset_prefix} \
   --libdir=%{toolset_prefix}/lib64 \
   --build=%{_target_platform} \
   --host=%{_target_platform} \
   --target=%{_target_platform} \
-  --enable-shared \
+  --disable-shared \
   --enable-plugins \
   --enable-threads \
   --enable-deterministic-archives \
