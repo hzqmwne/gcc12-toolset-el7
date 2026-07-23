@@ -26,7 +26,7 @@ gcc12-toolset-full g++ -std=c++11 \
     "$tmp/probe.cc" -o "$tmp/static-cxx"
 gcc12-toolset-compat "$tmp/static-cxx"
 
-if readelf -d "$tmp/static-cxx" | grep -q 'libstdc++.so.6'; then
+if readelf -d "$tmp/static-cxx" | grep -F 'libstdc++.so.6' >/dev/null; then
     printf 'static C++ probe still needs libstdc++.so.6\n' >&2
     exit 1
 fi

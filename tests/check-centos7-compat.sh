@@ -13,7 +13,7 @@ printf '%s\n' 'Dynamic dependencies:'
 readelf -d "$binary" | grep NEEDED || true
 
 versions=$(readelf --version-info "$binary" 2>/dev/null || true)
-if printf '%s\n' "$versions" | grep -qE 'GLIBCXX_|CXXABI_'; then
+if printf '%s\n' "$versions" | grep -E 'GLIBCXX_|CXXABI_' >/dev/null; then
     printf 'C++ runtime remains dynamically versioned:\n' >&2
     printf '%s\n' "$versions" | grep -oE 'GLIBCXX_[0-9.]+|CXXABI_[0-9.]+' | sort -Vu >&2
     exit 1

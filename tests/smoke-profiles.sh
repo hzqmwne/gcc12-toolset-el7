@@ -6,8 +6,8 @@ source /opt/gcc12-toolset/enable full
 [[ $CXX == /opt/gcc12-toolset/root/usr/bin/g++ ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64:* ]]
-"$CXX" --version | grep -q '12\.2\.1'
-ld --version | grep -q '2\.36\.1'
+"$CXX" --version | grep -F '12.2.1' >/dev/null
+ld --version | grep -F '2.36.1' >/dev/null
 
 source /opt/gcc12-toolset/enable compat
 [[ $GCC12_TOOLSET_PROFILE == compat ]]
@@ -15,7 +15,7 @@ source /opt/gcc12-toolset/enable compat
 [[ $(command -v g++) == /opt/gcc12-toolset/profiles/compat/bin/g++ ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
 [[ :$LD_LIBRARY_PATH: != *:/opt/gcc12-toolset/root/usr/lib64:* ]]
-ld --version | grep -q '2\.36\.1'
+ld --version | grep -F '2.36.1' >/dev/null
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -32,8 +32,9 @@ EOF
 g++ -std=c++11 "$work/probe.cc" -o "$work/compat"
 "$work/compat"
 
-readelf -d "$work/compat" | grep -q 'libstdc++.so.6'
-if ldd "$work/compat" | grep -q '/opt/gcc12-toolset/root/usr/lib64/libstdc++.so.6'; then
+readelf -d "$work/compat" | grep -F 'libstdc++.so.6' >/dev/null
+if ldd "$work/compat" \
+    | grep -F '/opt/gcc12-toolset/root/usr/lib64/libstdc++.so.6' >/dev/null; then
     printf 'compat probe loaded the full private libstdc++ runtime\n' >&2
     exit 1
 fi
@@ -50,7 +51,7 @@ if [[ -n "$bad_glibcxx" ]]; then
     exit 1
 fi
 
-if nm -C "$work/compat" | grep -q 'std::__cxx11'; then
+if nm -C "$work/compat" | grep -F 'std::__cxx11' >/dev/null; then
     printf 'compat probe unexpectedly contains new C++11 ABI symbols\n' >&2
     exit 1
 fi
