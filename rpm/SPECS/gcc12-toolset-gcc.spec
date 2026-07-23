@@ -219,7 +219,7 @@ grep -E '(/bin/([^/]+-)?(g\+\+|c\+\+)$|/libexec/gcc/.*/cc1plus$|/share/man/man1/
 
 cat files.compat files.libstdcxx files.libgcc files.static files.devel files.cxx \
   | LC_ALL=C sort -u > files.assigned
-comm -23 files.all files.assigned > files.gcc
+LC_ALL=C comm -23 files.all files.assigned > files.gcc
 
 # Fail if a path was accidentally assigned to two subpackages.
 assigned_count=$(cat files.compat files.libstdcxx files.libgcc files.static files.devel files.cxx | wc -l)
