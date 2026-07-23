@@ -56,7 +56,6 @@ LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
 
 %files
 %{toolset_prefix}/bin/*
-%{toolset_prefix}/lib/*
 %{binutils_libdir}
 %{toolset_prefix}/include/*
 %{toolset_prefix}/share/info/*
