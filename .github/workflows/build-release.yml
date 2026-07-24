@@ -6,7 +6,7 @@ on:
       jobs:
         description: GCC build parallelism
         required: true
-        default: "2"
+        default: "4"
         type: choice
         options:
           - "1"
@@ -42,7 +42,7 @@ jobs:
       artifact-metadata: write
 
     env:
-      BUILD_JOBS: ${{ inputs.jobs || '2' }}
+      BUILD_JOBS: ${{ inputs.jobs || '4' }}
       BUILDKIT_PROGRESS: plain
 
     steps:

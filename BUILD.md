@@ -135,9 +135,11 @@ echo "$GCC12_TOOLSET_PROFILE $CXX"
 
 ## 6. 基本验收
 
-GitHub Actions 会在 RPM 构建完成后启动一个不含系统 GCC/G++ 的干净
-CentOS 7 消费者容器，禁用软件仓库并全量安装本次生成的 RPM，再执行本节
-测试。这样可以发现被构建镜像预装依赖掩盖的 RPM 依赖或安装问题。
+GitHub Actions 会在 RPM 构建完成后启动一个全新的 CentOS 7 开发机容器，
+通过固定的官方 Vault 安装系统 GCC/G++ 4.8.5 及开发基线，再全量安装本次
+生成的工具集 RPM。安装前后会比较 `/usr/bin/gcc` 和 `/usr/bin/g++` 的
+路径、RPM 所有者、版本和文件校验结果，并分别用系统 GCC 与 GCC 12 编译
+运行程序，验证两套工具链按需启用、互不覆盖。
 
 先确认私有 soname 没有泄漏为系统 RPM 能力，binutils 的内部共享库依赖也没有
 变成无法满足的外部依赖：
