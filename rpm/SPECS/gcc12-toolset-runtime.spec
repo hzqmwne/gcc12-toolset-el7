@@ -1,6 +1,6 @@
 Name:           gcc12-toolset-runtime
 Version:        1.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Runtime launcher and filesystem layout for gcc12-toolset
 License:        MIT
 BuildArch:      noarch
@@ -50,5 +50,8 @@ install -m 0644 %{SOURCE5} %{buildroot}/opt/gcc12-toolset/enable-compat
 /usr/bin/gcc12-toolset-compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 1.0-3
+- Expose isolated 64-bit and 32-bit runtime directories in the full profile
+
 * Thu Jul 23 2026 Toolset Builder <builder@localhost> - 1.0-1
 - Initial isolated runtime layout

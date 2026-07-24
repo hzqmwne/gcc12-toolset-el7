@@ -7,7 +7,7 @@
 
 Name:           gcc12-toolset-binutils
 Version:        2.36.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Private binutils for gcc12-toolset
 License:        GPLv3+
 URL:            https://www.gnu.org/software/binutils/
@@ -35,11 +35,18 @@ cd build
   --host=%{_target_platform} \
   --target=%{_target_platform} \
   --enable-shared \
+  --enable-ld \
+  --enable-gold \
+  --enable-lto \
   --enable-plugins \
-  --enable-threads \
+  --enable-threads=yes \
+  --enable-relro=yes \
   --enable-deterministic-archives \
+  --enable-compressed-debug-sections=none \
+  --enable-generate-build-notes=no \
   --disable-werror \
   --disable-nls \
+  --with-sysroot=/ \
   --with-system-zlib
 make %{?_smp_mflags}
 
@@ -53,6 +60,8 @@ rm -f %{buildroot}%{toolset_prefix}/share/info/dir
 test -r %{buildroot}%{binutils_libdir}/libbfd-%{version}.so
 LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
   %{buildroot}%{toolset_prefix}/bin/ld --version | grep '2.36.1'
+LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
+  %{buildroot}%{toolset_prefix}/bin/ld.gold --version | grep '2.36.1'
 
 %files
 %{toolset_prefix}/bin/*
@@ -63,5 +72,8 @@ LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
 %{toolset_prefix}/share/man/man1/*
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 2.36.1-3
+- Enable BFD ld, gold, LTO plugins, RELRO, and threaded linker support
+
 * Thu Jul 23 2026 Toolset Builder <builder@localhost> - 2.36.1-1
 - Build isolated binutils for the GCC 12 toolset

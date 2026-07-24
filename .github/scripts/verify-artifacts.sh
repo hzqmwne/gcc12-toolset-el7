@@ -45,6 +45,8 @@ docker run --rm \
         /workspace/tests/check-abi.sh
         /workspace/tests/smoke-profiles.sh
         /workspace/tests/smoke-runtime.sh
+        /workspace/tests/smoke-multilib.sh
+        /workspace/tests/smoke-features.sh
 
         work=$(mktemp -d)
         trap "rm -rf \"\$work\"" EXIT

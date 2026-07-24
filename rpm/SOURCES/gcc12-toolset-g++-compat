@@ -6,12 +6,28 @@ profile=/opt/gcc12-toolset/profiles/compat
 version=12.2.1
 target=x86_64-redhat-linux
 
+multilib=
+for option in "$@"; do
+    case "$option" in
+        -m32) multilib=/32 ;;
+        -m64) multilib= ;;
+    esac
+done
+include_options=()
+library_options=()
+if [[ -n "$multilib" ]]; then
+    include_options=(-isystem "$profile/include/c++/$version/$target$multilib")
+    library_options=(-L"$profile/lib/gcc/$target/$version$multilib")
+fi
+
 exec "$root/bin/g++" \
     -nostdinc++ \
     -isystem "$profile/include/c++/$version" \
+    "${include_options[@]}" \
     -isystem "$profile/include/c++/$version/$target" \
     -isystem "$profile/include/c++/$version/backward" \
     -B"$profile/lib/gcc/$target/$version/" \
+    "${library_options[@]}" \
     -L"$profile/lib/gcc/$target/$version" \
     -D_GLIBCXX_USE_CXX11_ABI=0 \
     "$@"

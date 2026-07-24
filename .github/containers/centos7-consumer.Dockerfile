@@ -7,7 +7,9 @@ RUN set -eux; \
       gcc \
       gcc-c++ \
       glibc-devel \
-      libstdc++-devel; \
+      glibc-devel.i686 \
+      libstdc++-devel \
+      libstdc++-devel.i686; \
     locale -a | grep -qi '^en_US\.utf8$'; \
     test "$(gcc -dumpversion)" = 4.8.5; \
     test "$(g++ -dumpversion)" = 4.8.5; \

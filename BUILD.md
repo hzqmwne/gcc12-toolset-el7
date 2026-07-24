@@ -78,14 +78,49 @@ JOBS=16 IMAGE=internal/gcc12-builder:el7 ./build-rpms.sh
 
 ```text
 --enable-libstdcxx-dual-abi
+--enable-libstdcxx-backtrace
 --with-default-libstdcxx-abi=new
 --enable-languages=c,c++,lto
---disable-multilib
---disable-libsanitizer
---with-arch=x86-64
+--enable-multilib
+--enable-libsanitizer
+--enable-gnu-indirect-function
+--with-linker-hash-style=gnu
+--with-isl
+--with-arch_32=x86-64
+--with-arch_64=x86-64
 --with-tune=generic
 --with-boot-ldflags=-static-libstdc++ -static-libgcc
 ```
+
+与官方 EL7 `devtoolset-12-gcc` 一样，x86_64 构建启用 multilib。构建和
+消费者环境同时安装 i686 glibc 开发文件；RPM 包含 GCC 12 自己的 32 位
+`crt`、`libgcc` 和完整 `libstdc++`。这保证 `-m32` 不只是被驱动程序接受，
+而是能实际完成 C/C++ 编译、链接和运行。
+
+主构建使用与官方 devtoolset 相同方向的 `profiledbootstrap`，并为目标运行库
+启用 RELRO/NOW。ISL 提供 Graphite 循环优化；libsanitizer 提供 64 位
+ASan/UBSan/TSan/LSan 和 32 位 ASan/UBSan。sanitizer 运行库保持在工具集私有
+`lib64`/`lib` 中，因此只支持 `full` profile，不会向系统 RPM 能力泄漏。
+`libstdc++` backtrace 用于 C++23 `std::stacktrace`，链接时需要
+`-lstdc++_libbacktrace`。
+
+### 4.1 与 devtoolset-12 的功能取舍
+
+| 能力 | 本工具集 | 说明 |
+|---|---|---|
+| C、C++、LTO、插件 | 启用 | 核心编译能力 |
+| x86_64 + `-m32` | 启用 | 同时打包和验收两套 GCC runtime |
+| pthread、OpenMP、atomic、Graphite | 启用 | 常用并行、原子操作和循环优化能力 |
+| BFD ld、gold、linker LTO 插件 | 启用 | BFD 保持默认，gold 通过 `-fuse-ld=gold` 选择 |
+| ASan、UBSan、TSan、LSan | `full` 启用 | 私有运行库不泄漏到系统；32 位支持 ASan/UBSan |
+| libstdc++ backtrace/stacktrace | `full` 启用 | backtrace archive 随 static 子包安装 |
+| profiled bootstrap、RELRO/NOW | 启用 | 与官方构建质量和运行库加固方向一致 |
+| Fortran | 不启用 | 需要独立前端、libgfortran/quadmath 拆包和测试，非本项目常用目标 |
+| JIT、Ada、Go、D、Objective-C | 不启用 | 非基础 C/C++ 工具链能力 |
+| NVPTX offload | 不启用 | 官方 EL7 devtoolset-12 同样不启用 |
+| NLS | 不启用 | 保持固定英文诊断和较小安装面 |
+| `--with-gcc-major-version-only` | 不采用 | 避免改变已发布的 `12.2.1` 安装路径 |
+| 官方 system-libstdc++ 默认模型 | 仅 `compat` | `full` 保留本项目有意提供的完整 dual ABI |
 
 `full` profile 构建 GCC 12 自己的完整：
 
@@ -102,6 +137,7 @@ DTS patched headers
 _GLIBCXX_USE_DUAL_ABI=0
 libstdc++_nonshared.a（来自 nonshared48）
 INPUT(/usr/lib64/libstdc++.so.6 -lstdc++_nonshared)
+INPUT(/usr/lib/libstdc++.so.6 -lstdc++_nonshared)  # -m32
 ```
 
 两者共用同一份 GCC/binutils 可执行文件。
@@ -181,7 +217,27 @@ CXXABI_1.3.13
 
 它会验证 full 动态运行、ABI 1 静态 libstdc++ 链接，以及最终 ELF 不再 `NEEDED libstdc++.so.6`。
 
-### 6.4 CentOS 7 符号上限
+### 6.4 32 位 multilib
+
+```bash
+./tests/smoke-multilib.sh
+```
+
+它会分别用 `full` 和 `compat` 构建、链接并运行 32 位 C/C++ ELF，确认
+`full` 装载私有 32 位 `libstdc++`，而 `compat` 装载系统 i686
+`libstdc++` 且不超过 `GLIBCXX_3.4.19`。
+
+### 6.5 常用编译能力
+
+```bash
+./tests/smoke-features.sh
+```
+
+它会实际编译并运行 pthread、OpenMP、`libatomic`、Graphite/ISL、
+C++17 filesystem + LTO、BFD/gold linker、C++23 stacktrace、GNU hash 和
+ASan/UBSan 探针。
+
+### 6.6 CentOS 7 符号上限
 
 ```bash
 ./tests/check-centos7-compat.sh /path/to/application
@@ -275,7 +331,10 @@ C++11、ABI 1、CentOS 7 通用 CPU：
 
 ```text
 /opt/gcc12-toolset/root/usr/lib64/
-    完整 GCC 12 libgcc/libstdc++，仅 full profile 可见
+    完整 64 位 GCC 12 libgcc/libstdc++，仅 full profile 可见
+
+/opt/gcc12-toolset/root/usr/lib/
+    完整 32 位 GCC 12 libgcc/libstdc++，仅 full profile 可见
 
 /opt/gcc12-toolset/root/usr/lib64/binutils/
     共享 libbfd/libopcodes 等，full/compat 共用

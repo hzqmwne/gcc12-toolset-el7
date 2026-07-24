@@ -10,6 +10,10 @@
 - binutils 共享运行库位于独立的 common 目录，由两个 profile 共用；
 - `full`：完整 `libstdc++.so.6.0.30`、`libstdc++.a`、dual ABI、默认 ABI 1；
 - `compat`：DTS 12 patched headers、dual ABI 关闭、系统 `libstdc++.so.6` 和 `libstdc++_nonshared.a`；
+- x86_64 主机同时支持 64 位与 `-m32` C/C++ 构建，两个 profile 都经过运行验收；
+- 支持 LTO、pthread、OpenMP、Graphite/ISL、GNU IFUNC、GCC 插件和 GNU hash；
+- 同时提供默认 BFD ld 与可通过 `-fuse-ld=gold` 选择的 gold linker；
+- `full` profile 支持 ASan、UBSan、TSan、LSan 以及 C++23 `std::stacktrace`；
 - 支持 `-static-libstdc++`；
 - 支持命令启动子进程，也支持 `source` 在当前 shell 原地启用。
 
@@ -107,7 +111,22 @@ source /opt/gcc12-toolset/enable-compat
 
 重复 source 另一个 profile 会先移除前一个 profile 的路径，再原地切换。环境会设置 `CC`、`CXX` 和 `GCC12_TOOLSET_PROFILE`。
 
-`compat` profile 使用由官方 DTS 12 补丁构建的第二套 C++ 头文件、`libstdc++_nonshared.a` 和指向 `/usr/lib64/libstdc++.so.6` 的 linker script；GCC、binutils 和前端可执行文件仍与 `full` 共用。具体边界见 `COMPATIBILITY.md`。
+`compat` profile 使用由官方 DTS 12 补丁构建的第二套 C++ 头文件、`libstdc++_nonshared.a` 和分别指向 `/usr/lib64/libstdc++.so.6`、`/usr/lib/libstdc++.so.6` 的 64/32 位 linker script；GCC、binutils 和前端可执行文件仍与 `full` 共用。具体边界见 `COMPATIBILITY.md`。
+
+32 位构建直接增加 `-m32`：
+
+```bash
+gcc12-toolset-full gcc -m32 application.c -o application-32
+gcc12-toolset-compat g++ -m32 application.cc -o application-32
+```
+
+sanitizer 使用工具集自己的私有运行库，因此只在 `full` profile 中受支持：
+
+```bash
+gcc12-toolset-full gcc \
+  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  application.c -o application-sanitized
+```
 
 ## 推荐的 CentOS 7 发布方式
 
@@ -142,8 +161,8 @@ gcc12-toolset-full g++ \
 
 共享 binutils 运行库位于 `/opt/gcc12-toolset/root/usr/lib64/binutils`，两个
 profile 都会像 SCL 一样通过 `LD_LIBRARY_PATH` 启用它。完整 GCC 12
-`libgcc`/`libstdc++` 仍位于上一级 `lib64`，只对 `full` profile 可见；
-`compat` profile 明确移除该路径并链接系统 C++ 运行库。静态链接 C++ 运行库
+`libgcc`/`libstdc++` 分别位于上一级 `lib64` 和 `lib`，只对 `full` profile
+可见；`compat` profile 明确移除这两个路径并链接对应架构的系统 C++ 运行库。静态链接 C++ 运行库
 的最终程序不依赖该环境。
 
 ## 当前状态

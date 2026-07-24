@@ -13,7 +13,14 @@
 - 根据 4 vCPU runner 的峰值资源实测，将默认构建并发从 2 调整为 4。
 - 将 RPM 构建与消费者验收拆分为独立 job，使验收失败可以复用已构建 RPM。
 - 更新 GitHub Actions 到最新稳定版本并继续固定不可变提交 SHA。
-- RPM Release 统一升级到 `2`，确保重新发布的包具有唯一 NEVRA。
+- 对齐官方 devtoolset-12 的 x86_64 multilib 基线，为 `full` 与 `compat`
+  profile 增加经过实际编译、链接和运行验收的 `-m32` C/C++ 支持。
+- 对齐常用 GCC 能力：profiled bootstrap、Graphite/ISL、GNU hash/IFUNC、
+  libstdc++ backtrace 以及隔离安装的 sanitizer 运行库，并增加 pthread、
+  OpenMP、LTO、atomic、filesystem、stacktrace 和 sanitizer 端到端验收。
+- 同时构建 BFD ld 与 gold，启用 linker LTO 插件、RELRO 和线程支持，并
+  验证 `-fuse-ld=gold`。
+- RPM Release 统一升级到 `3`，确保重新构建的包具有唯一 NEVRA。
 
 ## 1.0.0 - 2026-07-24
 

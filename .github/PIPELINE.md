@@ -24,7 +24,10 @@ RPM 构建完成后，流水线另外构建一个全新的 CentOS 7 消费者镜
 开发基线，再从本次输出目录全量安装工具集 RPM。验收会确认 `/usr/bin/gcc`
 和 `/usr/bin/g++` 的路径、RPM 所有者、版本和文件校验状态没有变化，分别用
 系统工具链与 GCC 12 编译运行程序，并执行 ABI、profile、运行时和 RPM
-隔离测试。GCC 12 只在显式 launcher 或 source 时生效。
+隔离测试；还会验证系统 GCC 以及 `full`、`compat` 两个 profile 的 32 位
+C/C++、LTO、OpenMP 和静态运行库链路，并实际运行 pthread、atomic、
+Graphite、filesystem、BFD/gold、stacktrace、GNU hash 与 sanitizer 探针。
+GCC 12 只在显式 launcher 或 source 时生效。
 
 ## 版本管理
 

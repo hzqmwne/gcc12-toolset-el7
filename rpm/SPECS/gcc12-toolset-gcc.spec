@@ -4,11 +4,11 @@
 %global gcc_target x86_64-redhat-linux
 %global debug_package %{nil}
 %global __provides_exclude_from ^%{toolset_root}/.*$
-%global __requires_exclude ^lib(atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|quadmath|ssp|stdc\\+\\+)\\.so
+%global __requires_exclude ^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|lsan|quadmath|ssp|stdc\\+\\+|tsan|ubsan)\\.so
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -16,18 +16,25 @@ Source0:        gcc-12.2.1-20221121.tar.xz
 Source1:        gcc12-toolset-g++-compat
 Patch0:         gcc12-libstdc++-compat.patch
 BuildRequires:  gcc, gcc-c++, make
-BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, zlib-devel
+BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, isl-devel, zlib-devel
 BuildRequires:  flex, bison, texinfo, gettext, binutils
 BuildRequires:  /usr/bin/python
+BuildRequires:  /lib/libc.so.6 /usr/lib/libc.so
+BuildRequires:  /lib64/libc.so.6 /usr/lib64/libc.so
 BuildRequires:  gcc12-toolset-runtime, gcc12-toolset-binutils
 Requires:       gcc12-toolset-runtime
 Requires:       gcc12-toolset-binutils
 Requires:       gcc12-toolset-libgcc%{?_isa} = %{version}-%{release}
+Requires:       gcc12-toolset-libstdc++%{?_isa} = %{version}-%{release}
+Requires:       /usr/lib/libc.so /usr/lib64/libc.so
+Requires:       make
 
 %description
 A private GCC 12 compiler built on CentOS 7/glibc 2.17. Unlike the official
 RHEL 7 Developer Toolset compatibility layout, this package installs a full
-GCC 12 libstdc++ with dual ABI support below %{toolset_prefix}.
+GCC 12 libstdc++ with dual ABI support below %{toolset_prefix}. The compiler
+supports native x86_64 and -m32 C/C++, LTO, OpenMP, Graphite optimizations,
+GNU plugins, and the standard GCC sanitizer runtimes.
 
 %package -n gcc12-toolset-gcc-c++
 Summary:        C++ compiler for gcc12-toolset
@@ -73,6 +80,7 @@ binaries with -static-libstdc++ without statically linking glibc.
 Summary:        DTS-style CentOS 7 system libstdc++ compatibility profile
 Requires:       gcc12-toolset-gcc-c++%{?_isa} = %{version}-%{release}
 Requires:       libstdc++%{?_isa} >= 4.8.5
+Requires:       /usr/lib/libstdc++.so.6 /usr/lib64/libstdc++.so.6
 
 %description -n gcc12-toolset-libstdc++-compat
 A second C++ development view using headers built with the archived Red Hat
@@ -112,18 +120,26 @@ cd obj
   --enable-__cxa_atexit \
   --enable-gnu-unique-object \
   --enable-linker-build-id \
+  --with-linker-hash-style=gnu \
   --enable-plugin \
   --enable-initfini-array \
+  --enable-gnu-indirect-function \
   --enable-libstdcxx-dual-abi \
+  --enable-libstdcxx-backtrace \
   --with-default-libstdcxx-abi=new \
   --with-system-zlib \
-  --with-arch=x86-64 \
+  --with-isl \
+  --with-arch_32=x86-64 \
+  --with-arch_64=x86-64 \
   --with-tune=generic \
   --with-boot-ldflags='-static-libstdc++ -static-libgcc' \
-  --disable-multilib \
-  --disable-libsanitizer \
+  --enable-multilib \
+  --enable-libsanitizer \
+  --disable-libunwind-exceptions \
   --disable-nls
-make %{?_smp_mflags} bootstrap
+make %{?_smp_mflags} \
+  LDFLAGS_FOR_TARGET='-Wl,-z,relro,-z,now' \
+  profiledbootstrap
 
 # Build only the compiler and target libstdc++ a second time from the DTS
 # compatibility source view. This shares the installed GCC binaries while
@@ -147,15 +163,20 @@ cd obj-compat
   --enable-__cxa_atexit \
   --enable-gnu-unique-object \
   --enable-linker-build-id \
+  --with-linker-hash-style=gnu \
   --enable-plugin \
   --enable-initfini-array \
+  --enable-gnu-indirect-function \
   --enable-libstdcxx-dual-abi \
   --with-default-libstdcxx-abi=gcc4-compatible \
   --with-system-zlib \
-  --with-arch=x86-64 \
+  --with-isl \
+  --with-arch_32=x86-64 \
+  --with-arch_64=x86-64 \
   --with-tune=generic \
-  --disable-multilib \
+  --enable-multilib \
   --disable-libsanitizer \
+  --disable-libunwind-exceptions \
   --disable-nls
 make %{?_smp_mflags} all-gcc all-target-libgcc all-target-libstdc++-v3
 
@@ -176,7 +197,7 @@ make -C ../obj-compat DESTDIR="$compat_root" \
 compat_profile=%{buildroot}/opt/gcc12-toolset/profiles/compat
 install -d "$compat_profile/include/c++" \
   "$compat_profile/bin" \
-  "$compat_profile/lib/gcc/%{gcc_target}/%{version}"
+  "$compat_profile/lib/gcc/%{gcc_target}/%{version}/32"
 cp -a "$compat_root%{toolset_prefix}/include/c++/%{version}" \
   "$compat_profile/include/c++/"
 
@@ -190,10 +211,18 @@ compat_lib="$compat_profile/lib/gcc/%{gcc_target}/%{version}"
 install -m 0644 \
   ../obj-compat/%{gcc_target}/libstdc++-v3/src/.libs/libstdc++_nonshared48.a \
   "$compat_lib/libstdc++_nonshared.a"
+install -m 0644 \
+  ../obj-compat/%{gcc_target}/32/libstdc++-v3/src/.libs/libstdc++_nonshared48.a \
+  "$compat_lib/32/libstdc++_nonshared.a"
 cat > "$compat_lib/libstdc++.so" <<'EOF'
 /* GNU ld script: CentOS 7 system runtime plus DTS 12 compatibility objects. */
 OUTPUT_FORMAT(elf64-x86-64)
 INPUT ( /usr/lib64/libstdc++.so.6 -lstdc++_nonshared )
+EOF
+cat > "$compat_lib/32/libstdc++.so" <<'EOF'
+/* GNU ld script: CentOS 7 i686 system runtime plus DTS 12 compatibility objects. */
+OUTPUT_FORMAT(elf32-i386)
+INPUT ( /usr/lib/libstdc++.so.6 -lstdc++_nonshared )
 EOF
 install -m 0755 %{SOURCE1} "$compat_profile/bin/g++"
 ln -s g++ "$compat_profile/bin/c++"
@@ -226,7 +255,7 @@ grep -E '/libstdc\+\+\.so\.6([^/]*)$' files.noncompat \
   > files.libstdcxx || :
 grep -E '/libgcc_s\.so([^/]*)$' files.noncompat \
   > files.libgcc || :
-grep -E '/lib(stdc\+\+|supc\+\+|stdc\+\+fs)\.a$' files.noncompat \
+grep -E '/lib(stdc\+\+|supc\+\+|stdc\+\+fs|stdc\+\+_libbacktrace)\.a$' files.noncompat \
   > files.static || :
 grep -E '(/include/c\+\+/|/libstdc\+\+\.so$)' files.noncompat \
   > files.devel || :
@@ -255,10 +284,18 @@ export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
 export LD_LIBRARY_PATH=%{binutils_libdir}
 test -x obj/gcc/xgcc
 obj/gcc/xgcc -Bobj/gcc -dumpfullversion | grep '^12\.2\.1$'
+test "$(obj/gcc/xgcc -Bobj/gcc -m32 -print-multi-directory)" = 32
 config_header=$(find %{buildroot}%{toolset_prefix}/include/c++/%{version} -name c++config.h | head -n 1)
 test -n "$config_header"
 grep -q '^# define _GLIBCXX_USE_CXX11_ABI 1' "$config_header"
 grep -q 'GLIBCXX_3.4.30' %{buildroot}%{toolset_prefix}/lib64/libstdc++.so.6.0.30
+grep -q 'GLIBCXX_3.4.30' %{buildroot}%{toolset_prefix}/lib/libstdc++.so.6.0.30
+test -r %{buildroot}%{toolset_prefix}/lib64/libasan.so.8
+test -r %{buildroot}%{toolset_prefix}/lib/libasan.so.8
+test -r %{buildroot}%{toolset_prefix}/lib64/libubsan.so.1
+test -r %{buildroot}%{toolset_prefix}/lib/libubsan.so.1
+find %{buildroot}%{toolset_prefix} -name libstdc++_libbacktrace.a -print -quit \
+  | grep -q .
 compat_header=$(find %{buildroot}/opt/gcc12-toolset/profiles/compat/include \
   -name c++config.h | head -n 1)
 test -n "$compat_header"
@@ -266,6 +303,9 @@ grep -Eq 'define[[:blank:]]+_GLIBCXX_USE_DUAL_ABI[[:blank:]]+0' "$compat_header"
 grep -q '/usr/lib64/libstdc++.so.6' \
   %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{version}/libstdc++.so
 ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{version}/libstdc++_nonshared.a | grep -q '\.o$'
+grep -q '/usr/lib/libstdc++.so.6' \
+  %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{version}/32/libstdc++.so
+ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{version}/32/libstdc++_nonshared.a | grep -q '\.o$'
 
 %files -f obj/files.gcc
 
@@ -282,6 +322,10 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-3
+- Enable x86_64 multilib and common GCC development features
+- Add private sanitizer runtimes, Graphite, and libstdc++ backtrace support
+
 * Thu Jul 23 2026 Toolset Builder <builder@localhost> - 12.2.1-1
 - Build complete GCC 12 libstdc++ with dual ABI and new ABI default
 - Keep all compiler and runtime files isolated below /opt/gcc12-toolset

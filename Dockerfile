@@ -10,8 +10,9 @@ RUN set -eux; \
     yum -y install \
       rpm-build rpmdevtools redhat-rpm-config \
       gcc gcc-c++ make binutils \
-      glibc-common glibc-devel libstdc++-devel \
-      gmp-devel mpfr-devel libmpc-devel zlib-devel \
+      glibc-common glibc-devel glibc-devel.i686 \
+      libstdc++-devel libstdc++-devel.i686 \
+      gmp-devel mpfr-devel libmpc-devel isl-devel zlib-devel \
       bison flex texinfo gettext dejagnu expect \
       perl python3 patch diffutils file findutils which \
       curl ca-certificates tar gzip bzip2 xz; \

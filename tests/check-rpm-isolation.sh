@@ -5,7 +5,7 @@ binutils_package=gcc12-toolset-binutils
 full_runtime_package=gcc12-toolset-libstdc++
 binutils_libdir=/opt/gcc12-toolset/root/usr/lib64/binutils
 private_binutils_soname='^lib(bfd|opcodes|ctf|ctf-nobfd)(-[0-9.]+)?\.so'
-private_gcc_soname='^lib(atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|quadmath|ssp|stdc\+\+)\.so'
+private_gcc_soname='^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|lsan|quadmath|ssp|stdc\+\+|tsan|ubsan)\.so'
 
 test -r "$binutils_libdir/libbfd-2.36.1.so"
 test ! -e /opt/gcc12-toolset/root/usr/lib64/libbfd-2.36.1.so
@@ -35,6 +35,12 @@ while IFS= read -r package; do
     if rpm -q --requires "$package" \
         | grep -E "$private_gcc_soname" >/dev/null; then
         printf '%s has an unresolved public dependency on a private GCC library\n' \
+            "$package" >&2
+        exit 1
+    fi
+    if rpm -q --provides "$package" \
+        | grep -E "$private_gcc_soname" >/dev/null; then
+        printf '%s exposes a private GCC runtime as a system RPM capability\n' \
             "$package" >&2
         exit 1
     fi
