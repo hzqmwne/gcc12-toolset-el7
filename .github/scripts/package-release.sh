@@ -43,9 +43,11 @@ tar --sort=name \
     --owner=0 --group=0 --numeric-owner \
     -C "$DIST/package" -czf "$DIST/$ARCHIVE" .
 
+cp -a "$OUT"/RPMS/*.rpm "$OUT"/SRPMS/*.src.rpm "$DIST/"
+
 (
     cd "$DIST"
-    sha256sum "$ARCHIVE" > SHA256SUMS
+    LC_ALL=C sha256sum "$ARCHIVE" *.rpm > SHA256SUMS
 )
 
 printf 'Release archive: %s\n' "$DIST/$ARCHIVE"

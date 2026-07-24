@@ -135,6 +135,10 @@ echo "$GCC12_TOOLSET_PROFILE $CXX"
 
 ## 6. 基本验收
 
+GitHub Actions 会在 RPM 构建完成后启动一个不含系统 GCC/G++ 的干净
+CentOS 7 消费者容器，禁用软件仓库并全量安装本次生成的 RPM，再执行本节
+测试。这样可以发现被构建镜像预装依赖掩盖的 RPM 依赖或安装问题。
+
 先确认私有 soname 没有泄漏为系统 RPM 能力，binutils 的内部共享库依赖也没有
 变成无法满足的外部依赖：
 

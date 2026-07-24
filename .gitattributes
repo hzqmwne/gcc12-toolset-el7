@@ -6,4 +6,5 @@
 *.spec text eol=lf
 *.yml text eol=lf
 Dockerfile text eol=lf
+*.Dockerfile text eol=lf
 VERSION text eol=lf

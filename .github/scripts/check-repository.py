@@ -46,7 +46,7 @@ def main() -> int:
         if not path.is_file():
             continue
         relative = path.relative_to(ROOT).as_posix()
-        if path.suffix not in TEXT_SUFFIXES and path.name != "Dockerfile":
+        if path.suffix not in TEXT_SUFFIXES and not path.name.endswith("Dockerfile"):
             continue
         data = path.read_bytes()
         if b"\0" in data:

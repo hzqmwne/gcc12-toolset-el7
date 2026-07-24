@@ -7,7 +7,7 @@
 
 Name:           gcc12-toolset-binutils
 Version:        2.36.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Private binutils for gcc12-toolset
 License:        GPLv3+
 URL:            https://www.gnu.org/software/binutils/

@@ -40,4 +40,8 @@ jobs:
             | xargs -0 -r shellcheck --severity=error --shell=bash
 
       - name: Check Dockerfile
-        run: docker build --check .
+        run: |
+          docker build --check .
+          docker build --check \
+            --file .github/containers/centos7-consumer.Dockerfile \
+            .github/containers

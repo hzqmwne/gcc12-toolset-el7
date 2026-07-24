@@ -11,11 +11,17 @@ TAG=${GITHUB_REF_NAME:-}
 }
 
 mapfile -t assets < <(find "$ROOT/dist" -maxdepth 1 -type f \
-    \( -name '*.tar.gz' -o -name 'SHA256SUMS' \) -print | LC_ALL=C sort)
+    \( -name '*.tar.gz' -o -name '*.rpm' -o -name 'SHA256SUMS' \) \
+    -print | LC_ALL=C sort)
 (( ${#assets[@]} >= 2 )) || {
     printf 'Release assets are missing\n' >&2
     exit 1
 }
+
+(
+    cd "$ROOT/dist"
+    sha256sum -c SHA256SUMS
+)
 
 if gh release view "$TAG" >/dev/null 2>&1; then
     printf 'Release %s already exists; refusing to mutate published assets.\n' "$TAG" >&2

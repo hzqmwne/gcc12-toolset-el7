@@ -148,4 +148,9 @@ profile 都会像 SCL 一样通过 `LD_LIBRARY_PATH` 启用它。完整 GCC 12
 
 ## 当前状态
 
-本目录包含完整构建材料和测试脚本。根据项目约定，文档落地时没有主动执行耗时的 GCC bootstrap；首次使用应按照 `BUILD.md` 完成构建和验收。
+`v1.0.0` 已通过 GitHub Actions 在 CentOS 7 构建镜像中完成 bootstrap、
+RPM 打包、全量安装和 C/C++ 编译运行验收。后续 Release 同时提供完整归档、
+独立二进制 RPM、SRPM、SHA-256 清单和构建来源证明。
+
+标签构建是正式发布的唯一入口；日常调试可在 Actions 页面手动启动
+`Build and Release`，并选择构建并发度和 shell 跟踪。
