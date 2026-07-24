@@ -33,11 +33,13 @@ docker run --rm \
         [[ $(gcc -dumpversion) == 4.8.5 ]]
         [[ $(g++ -dumpversion) == 4.8.5 ]]
         rpm -V gcc gcc-c++
+        printf "System GCC/G++ 4.8.5 remained unchanged after toolset installation.\n"
 
-        gcc12-toolset-full gcc -dumpversion | grep -Fx 12
-        gcc12-toolset-full g++ -dumpversion | grep -Fx 12
+        gcc12-toolset-full gcc --version | grep -F 12.2.1 >/dev/null
+        gcc12-toolset-full g++ --version | grep -F 12.2.1 >/dev/null
         [[ $(command -v gcc) == /usr/bin/gcc ]]
         [[ $(command -v g++) == /usr/bin/g++ ]]
+        printf "Toolset launchers select GCC 12 without changing the parent shell.\n"
 
         /workspace/tests/check-rpm-isolation.sh
         /workspace/tests/check-abi.sh
