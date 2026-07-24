@@ -5,6 +5,12 @@ GCC_URL=https://git.centos.org/sources/devtoolset-12-gcc/c7/ecaedb16188931aa35d6
 GCC_FALLBACK_URL=https://git.centos.org/devtoolset-12-gcc/c7/ecaedb16188931aa35d627f2edb28dbab5f8f3c1
 GCC_SHA1=ecaedb16188931aa35d627f2edb28dbab5f8f3c1
 
+# GCC upstream prerequisite used by the archived devtoolset-12 build.
+ISL_SOURCE=isl-0.24.tar.bz2
+ISL_URL=https://gcc.gnu.org/pub/gcc/infrastructure/isl-0.24.tar.bz2
+ISL_FALLBACK_URL=https://downloads.sourceforge.net/project/libisl/isl-0.24.tar.bz2
+ISL_SHA256=fcf78dd9656c10eb8cf9fbd5f59a0b6b01386205fe1934b3b287a0a1898145c0
+
 # Companion source version used by devtoolset-12.
 BINUTILS_SOURCE=binutils-2.36.1.tar.xz
 BINUTILS_URL=https://ftpmirror.gnu.org/binutils/binutils-2.36.1.tar.xz

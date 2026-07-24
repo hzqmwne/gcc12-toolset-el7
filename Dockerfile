@@ -12,7 +12,7 @@ RUN set -eux; \
       gcc gcc-c++ make binutils \
       glibc-common glibc-devel glibc-devel.i686 \
       libstdc++-devel libstdc++-devel.i686 \
-      gmp-devel mpfr-devel libmpc-devel isl-devel zlib-devel \
+      gmp-devel mpfr-devel libmpc-devel zlib-devel \
       bison flex texinfo gettext dejagnu expect \
       perl python3 patch diffutils file findutils which \
       curl ca-certificates tar gzip bzip2 xz; \

@@ -12,6 +12,7 @@
 - `compat`：DTS 12 patched headers、dual ABI 关闭、系统 `libstdc++.so.6` 和 `libstdc++_nonshared.a`；
 - x86_64 主机同时支持 64 位与 `-m32` C/C++ 构建，两个 profile 都经过运行验收；
 - 支持 LTO、pthread、OpenMP、Graphite/ISL、GNU IFUNC、GCC 插件和 GNU hash；
+- Graphite 使用锁定并私有构建的 GCC upstream ISL 0.24，不依赖系统 `isl-devel`；
 - 同时提供默认 BFD ld 与可通过 `-fuse-ld=gold` 选择的 gold linker；
 - `full` profile 支持 ASan、UBSan、TSan、LSan 以及 C++23 `std::stacktrace`；
 - 支持 `-static-libstdc++`；

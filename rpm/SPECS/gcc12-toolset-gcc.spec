@@ -4,19 +4,20 @@
 %global gcc_target x86_64-redhat-linux
 %global debug_package %{nil}
 %global __provides_exclude_from ^%{toolset_root}/.*$
-%global __requires_exclude ^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|lsan|quadmath|ssp|stdc\\+\\+|tsan|ubsan)\\.so
+%global __requires_exclude ^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|isl|itm|lsan|quadmath|ssp|stdc\\+\\+|tsan|ubsan)\\.so
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
 Source0:        gcc-12.2.1-20221121.tar.xz
 Source1:        gcc12-toolset-g++-compat
+Source2:        isl-0.24.tar.bz2
 Patch0:         gcc12-libstdc++-compat.patch
 BuildRequires:  gcc, gcc-c++, make
-BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, isl-devel, zlib-devel
+BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, zlib-devel
 BuildRequires:  flex, bison, texinfo, gettext, binutils
 BuildRequires:  /usr/bin/python
 BuildRequires:  /lib/libc.so.6 /usr/lib/libc.so
@@ -89,7 +90,7 @@ system libstdc++.so.6 and libstdc++_nonshared.a. The GCC and binutils binaries
 are shared with the full profile.
 
 %prep
-%setup -q -n gcc-12.2.1-20221121
+%setup -q -n gcc-12.2.1-20221121 -a 2
 cd ..
 rm -rf gcc-12.2.1-20221121-compat
 cp -a gcc-12.2.1-20221121 gcc-12.2.1-20221121-compat
@@ -104,6 +105,19 @@ unset LD_LIBRARY_PATH LIBRARY_PATH CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH
 export LD_LIBRARY_PATH=%{binutils_libdir}
 mkdir obj
 cd obj
+mkdir isl-build isl-install
+cd isl-build
+../../isl-0.24/configure \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CFLAGS='%{optflags} -fpic' \
+  --prefix="$(cd .. && pwd)/isl-install" \
+  --enable-shared \
+  --disable-static
+make %{?_smp_mflags}
+make install
+cd ..
+
 ../configure \
   --prefix=%{toolset_prefix} \
   --libdir=%{toolset_prefix}/lib64 \
@@ -128,7 +142,7 @@ cd obj
   --enable-libstdcxx-backtrace \
   --with-default-libstdcxx-abi=new \
   --with-system-zlib \
-  --with-isl \
+  --with-isl="$(pwd)/isl-install" \
   --with-arch_32=x86-64 \
   --with-arch_64=x86-64 \
   --with-tune=generic \
@@ -140,6 +154,7 @@ cd obj
 make %{?_smp_mflags} \
   LDFLAGS_FOR_TARGET='-Wl,-z,relro,-z,now' \
   profiledbootstrap
+cp -a isl-install/lib/libisl.so.23 gcc/
 
 # Build only the compiler and target libstdc++ a second time from the DTS
 # compatibility source view. This shares the installed GCC binaries while
@@ -170,7 +185,7 @@ cd obj-compat
   --enable-libstdcxx-dual-abi \
   --with-default-libstdcxx-abi=gcc4-compatible \
   --with-system-zlib \
-  --with-isl \
+  --with-isl="$(pwd)/../obj/isl-install" \
   --with-arch_32=x86-64 \
   --with-arch_64=x86-64 \
   --with-tune=generic \
@@ -185,6 +200,8 @@ export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
 export LD_LIBRARY_PATH=%{binutils_libdir}
 cd obj
 make DESTDIR=%{buildroot} install
+install -m 0755 isl-install/lib/libisl.so.23 \
+  %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}/libisl.so.23
 find %{buildroot}%{toolset_prefix} -name '*.la' -delete
 rm -f %{buildroot}%{toolset_prefix}/share/info/dir
 
@@ -296,6 +313,7 @@ test -r %{buildroot}%{toolset_prefix}/lib64/libubsan.so.1
 test -r %{buildroot}%{toolset_prefix}/lib/libubsan.so.1
 find %{buildroot}%{toolset_prefix} -name libstdc++_libbacktrace.a -print -quit \
   | grep -q .
+test -r %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}/libisl.so.23
 compat_header=$(find %{buildroot}/opt/gcc12-toolset/profiles/compat/include \
   -name c++config.h | head -n 1)
 test -n "$compat_header"
@@ -322,6 +340,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-4
+- Build the locked GCC upstream ISL 0.24 prerequisite privately
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-3
 - Enable x86_64 multilib and common GCC development features
 - Add private sanitizer runtimes, Graphite, and libstdc++ backtrace support

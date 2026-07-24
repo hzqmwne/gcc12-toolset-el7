@@ -5,7 +5,7 @@ binutils_package=gcc12-toolset-binutils
 full_runtime_package=gcc12-toolset-libstdc++
 binutils_libdir=/opt/gcc12-toolset/root/usr/lib64/binutils
 private_binutils_soname='^lib(bfd|opcodes|ctf|ctf-nobfd)(-[0-9.]+)?\.so'
-private_gcc_soname='^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|itm|lsan|quadmath|ssp|stdc\+\+|tsan|ubsan)\.so'
+private_gcc_soname='^lib(asan|atomic|cc1|cc1plugin|cp1plugin|gcc_s|gomp|isl|itm|lsan|quadmath|ssp|stdc\+\+|tsan|ubsan)\.so'
 
 test -r "$binutils_libdir/libbfd-2.36.1.so"
 test ! -e /opt/gcc12-toolset/root/usr/lib64/libbfd-2.36.1.so

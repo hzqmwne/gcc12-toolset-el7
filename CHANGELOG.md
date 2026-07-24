@@ -20,7 +20,9 @@
   OpenMP、LTO、atomic、filesystem、stacktrace 和 sanitizer 端到端验收。
 - 同时构建 BFD ld 与 gold，启用 linker LTO 插件、RELRO 和线程支持，并
   验证 `-fuse-ld=gold`。
-- RPM Release 统一升级到 `3`，确保重新构建的包具有唯一 NEVRA。
+- 按官方 devtoolset-12 方式锁定并私有构建 ISL 0.24，不依赖 EL7 仓库中
+  不存在的 `isl-devel`，同时避免向系统暴露私有 `libisl`。
+- RPM Release 统一升级到 `4`，确保重新构建的包具有唯一 NEVRA。
 
 ## 1.0.0 - 2026-07-24
 

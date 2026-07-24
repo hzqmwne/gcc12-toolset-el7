@@ -13,6 +13,7 @@ mkdir -p "$TOPDIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS} "$OUT"
 cp -a "$ROOT/rpm/SOURCES/." "$TOPDIR/SOURCES/"
 cp -a "$ROOT/rpm/SPECS/." "$TOPDIR/SPECS/"
 cp -a "$CACHE/gcc-12.2.1-20221121.tar.xz" "$TOPDIR/SOURCES/"
+cp -a "$CACHE/isl-0.24.tar.bz2" "$TOPDIR/SOURCES/"
 cp -a "$CACHE/binutils-2.36.1.tar.xz" "$TOPDIR/SOURCES/"
 cp -a "$CACHE/gcc12-libstdc++-compat.patch" "$TOPDIR/SOURCES/"
 
