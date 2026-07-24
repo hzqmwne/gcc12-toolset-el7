@@ -3,6 +3,7 @@
 
 _gcc12_root=/opt/gcc12-toolset/root/usr
 _gcc12_common_lib=$_gcc12_root/lib64/binutils
+_gcc12_compiler_lib=$_gcc12_root/lib/gcc/x86_64-redhat-linux/12.2.1
 _gcc12_full_lib64=$_gcc12_root/lib64
 _gcc12_full_lib32=$_gcc12_root/lib
 _gcc12_profile=${1:-${GCC12_TOOLSET_PROFILE:-full}}
@@ -52,6 +53,7 @@ _gcc12_remove_path() {
 _gcc12_profile_bin=/opt/gcc12-toolset/profiles/compat/bin
 _gcc12_remove_path PATH "$_gcc12_profile_bin"
 _gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_common_lib"
+_gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_compiler_lib"
 _gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_full_lib64"
 _gcc12_remove_path LD_LIBRARY_PATH "$_gcc12_full_lib32"
 _gcc12_remove_path LIBRARY_PATH "$_gcc12_full_lib64"
@@ -64,6 +66,7 @@ _gcc12_prepend_path PATH "$_gcc12_root/bin"
 _gcc12_prepend_path MANPATH "$_gcc12_root/share/man"
 _gcc12_prepend_path INFOPATH "$_gcc12_root/share/info"
 _gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_common_lib"
+_gcc12_prepend_path LD_LIBRARY_PATH "$_gcc12_compiler_lib"
 _gcc12_prepend_path PKG_CONFIG_PATH "$_gcc12_common_lib/pkgconfig"
 
 case "$_gcc12_profile" in
@@ -98,7 +101,8 @@ GCC12_TOOLSET_PROFILE=$_gcc12_profile
 GCC12_TOOLSET_RUNTIME=$_gcc12_profile
 export GCC12_TOOLSET_ROOT GCC12_TOOLSET_PROFILE GCC12_TOOLSET_RUNTIME CC CXX
 
-unset _gcc12_root _gcc12_common_lib _gcc12_full_lib64 _gcc12_full_lib32
+unset _gcc12_root _gcc12_common_lib _gcc12_compiler_lib
+unset _gcc12_full_lib64 _gcc12_full_lib32
 unset _gcc12_profile _gcc12_profile_bin
 unset _gcc12_var _gcc12_value _gcc12_old _gcc12_new _gcc12_ifs _gcc12_item
 unset -f _gcc12_prepend_path _gcc12_remove_path 2>/dev/null || true

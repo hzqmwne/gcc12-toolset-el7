@@ -5,6 +5,7 @@ source /opt/gcc12-toolset/enable full
 [[ $GCC12_TOOLSET_PROFILE == full ]]
 [[ $CXX == /opt/gcc12-toolset/root/usr/bin/g++ ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
+[[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib/gcc/x86_64-redhat-linux/12.2.1:* ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64:* ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib:* ]]
 "$CXX" --version | grep -F '12.2.1' >/dev/null
@@ -15,6 +16,7 @@ source /opt/gcc12-toolset/enable compat
 [[ $CXX == /opt/gcc12-toolset/profiles/compat/bin/g++ ]]
 [[ $(command -v g++) == /opt/gcc12-toolset/profiles/compat/bin/g++ ]]
 [[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib64/binutils:* ]]
+[[ :$LD_LIBRARY_PATH: == *:/opt/gcc12-toolset/root/usr/lib/gcc/x86_64-redhat-linux/12.2.1:* ]]
 [[ :$LD_LIBRARY_PATH: != *:/opt/gcc12-toolset/root/usr/lib64:* ]]
 [[ :$LD_LIBRARY_PATH: != *:/opt/gcc12-toolset/root/usr/lib:* ]]
 ld --version | grep -F '2.36.1' >/dev/null

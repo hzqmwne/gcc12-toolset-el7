@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -117,6 +117,7 @@ cd isl-build
 make %{?_smp_mflags}
 make install
 cd ..
+export LD_LIBRARY_PATH="$(pwd)/isl-install/lib:%{binutils_libdir}"
 
 ../configure \
   --prefix=%{toolset_prefix} \
@@ -197,7 +198,7 @@ make %{?_smp_mflags} all-gcc all-target-libgcc all-target-libstdc++-v3
 
 %install
 export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
-export LD_LIBRARY_PATH=%{binutils_libdir}
+export LD_LIBRARY_PATH="$(pwd)/obj/isl-install/lib:%{binutils_libdir}"
 cd obj
 make DESTDIR=%{buildroot} install
 install -m 0755 isl-install/lib/libisl.so.23 \
@@ -298,7 +299,7 @@ test -s files.compat
 
 %check
 export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
-export LD_LIBRARY_PATH=%{binutils_libdir}
+export LD_LIBRARY_PATH="$(pwd)/obj/isl-install/lib:%{binutils_libdir}"
 test -x obj/gcc/xgcc
 obj/gcc/xgcc -Bobj/gcc -dumpfullversion | grep '^12\.2\.1$'
 test "$(obj/gcc/xgcc -Bobj/gcc -m32 -print-multi-directory)" = 32
@@ -340,6 +341,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-5
+- Expose the private ISL runtime during bootstrap and profile activation
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-4
 - Build the locked GCC upstream ISL 0.24 prerequisite privately
 
