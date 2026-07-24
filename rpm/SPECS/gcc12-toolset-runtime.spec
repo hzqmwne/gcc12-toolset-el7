@@ -1,6 +1,6 @@
 Name:           gcc12-toolset-runtime
 Version:        1.0
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Runtime launcher and filesystem layout for gcc12-toolset
 License:        MIT
 BuildArch:      noarch
@@ -50,6 +50,9 @@ install -m 0644 %{SOURCE5} %{buildroot}/opt/gcc12-toolset/enable-compat
 /usr/bin/gcc12-toolset-compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 1.0-6
+- Rebuild with the private ISL installation directory correction
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 1.0-5
 - Add the compiler private dependency directory to both profiles
 

@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -201,6 +201,7 @@ export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
 export LD_LIBRARY_PATH="$(pwd)/obj/isl-install/lib:%{binutils_libdir}"
 cd obj
 make DESTDIR=%{buildroot} install
+install -d %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}
 install -m 0755 isl-install/lib/libisl.so.23 \
   %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}/libisl.so.23
 find %{buildroot}%{toolset_prefix} -name '*.la' -delete
@@ -341,6 +342,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-6
+- Create the private GCC dependency directory before installing libisl
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-5
 - Expose the private ISL runtime during bootstrap and profile activation
 
