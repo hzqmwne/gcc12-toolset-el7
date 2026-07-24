@@ -61,6 +61,24 @@ out/SHA256SUMS.rpms
 
 GCC 三阶段 bootstrap 以及第二套 compat libstdc++ 构建通常耗时较长。建议至少准备 16 GiB 内存和 80 GiB 可用磁盘。
 
+## 分阶段本地构建
+
+默认命令仍会在两个容器阶段中依次构建 runtime、binutils 和 GCC：
+
+```bash
+./build-rpms.sh --jobs 4
+```
+
+它与 CI 使用相同的阶段边界。需要单独调试或复用前置 RPM 时，可显式运行：
+
+```bash
+./build-rpms.sh --stage prerequisites --jobs 4
+./build-rpms.sh --stage gcc --seed-dir out --jobs 4
+```
+
+第二个命令会导入第一个命令产出的 runtime/binutils RPM；最终 `out/` 与默认
+单命令流程一样包含完整的二进制 RPM、SRPM 和校验清单。
+
 ## RPM 列表
 
 ```text

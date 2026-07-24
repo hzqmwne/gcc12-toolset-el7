@@ -31,8 +31,104 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prerequisites:
+    name: Build prerequisite RPMs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      artifact-metadata: write
+
+    env:
+      BUILD_JOBS: ${{ inputs.jobs || '4' }}
+      BUILDKIT_PROGRESS: plain
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release metadata and repository
+        run: python3 .github/scripts/check-repository.py
+
+      - name: Record initial runner state
+        run: |
+          mkdir -p out/ci
+          df -h > out/ci/disk-before.txt
+          free -h > out/ci/memory-before.txt
+          docker info > out/ci/docker-info.txt
+
+      - name: Free disk space
+        if: ${{ github.event_name == 'push' || inputs.free_disk }}
+        run: |
+          sudo rm -rf \
+            /opt/hostedtoolcache/CodeQL \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/share/dotnet
+          docker system prune --all --force
+          df -h
+
+      - name: Restore source cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: cache
+          key: sources-${{ hashFiles('sources.lock.sh') }}
+
+      - name: Fetch and verify locked sources
+        run: bash ./fetch-sources.sh cache
+
+      - name: Build runtime and binutils RPMs
+        run: |
+          command=(bash)
+          if [[ '${{ inputs.trace }}' == true ]]; then
+            command+=(-x)
+          fi
+          command+=(./build-rpms.sh --stage prerequisites --jobs "$BUILD_JOBS" --rebuild-image)
+          bash .github/scripts/run-with-resource-monitor.sh "${command[@]}"
+
+      - name: Upload prerequisite RPMs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rpm-prerequisites-${{ github.sha }}
+          path: |
+            out/RPMS/
+            out/SRPMS/
+            out/SHA256SUMS.generated
+            out/SHA256SUMS.rpms
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Record final runner state
+        if: always()
+        run: |
+          mkdir -p out/ci
+          df -h > out/ci/disk-after.txt
+          free -h > out/ci/memory-after.txt
+          docker system df > out/ci/docker-disk.txt 2>&1 || true
+          docker images --digests > out/ci/docker-images.txt 2>&1 || true
+          du -sh cache out 2>/dev/null > out/ci/workspace-sizes.txt || true
+
+      - name: Upload prerequisite diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: prerequisite-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            out/ci/
+            out/SHA256SUMS.generated
+            out/SHA256SUMS.rpms
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 14
+
   build:
-    name: Build RPMs
+    name: Build GCC RPMs
+    needs: prerequisites
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     permissions:
@@ -81,13 +177,19 @@ jobs:
       - name: Fetch and verify locked sources
         run: bash ./fetch-sources.sh cache
 
-      - name: Build RPMs
+      - name: Download prerequisite RPMs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rpm-prerequisites-${{ github.sha }}
+          path: prerequisites
+
+      - name: Build GCC RPMs
         run: |
           command=(bash)
           if [[ '${{ inputs.trace }}' == true ]]; then
             command+=(-x)
           fi
-          command+=(./build-rpms.sh --jobs "$BUILD_JOBS" --rebuild-image)
+          command+=(./build-rpms.sh --stage gcc --seed-dir prerequisites --jobs "$BUILD_JOBS" --rebuild-image)
           bash .github/scripts/run-with-resource-monitor.sh "${command[@]}"
 
       - name: Upload RPM build outputs

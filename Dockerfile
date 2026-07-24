@@ -24,7 +24,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 COPY . /workspace
-RUN chmod +x /workspace/*.sh /workspace/rpm/SOURCES/* /workspace/tests/*.sh
+RUN chmod +x /workspace/*.sh /workspace/scripts/*.sh /workspace/rpm/SOURCES/* /workspace/tests/*.sh
 
 WORKDIR /workspace
 ENTRYPOINT ["/workspace/docker-build.sh"]

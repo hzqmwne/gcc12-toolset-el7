@@ -80,6 +80,26 @@ JOBS=16 IMAGE=internal/gcc12-builder:el7 ./build-rpms.sh
 
 脚本不会删除已有 `cache/`。`out/` 中的 RPM 子目录会在成功导出前重建；不要把需要保留的手工文件放在其中。
 
+### 3.1 分阶段执行
+
+`build-rpms.sh` 默认以两个 Docker 阶段串行完成完整构建：`prerequisites`
+构建 runtime/binutils，`gcc` 导入这些 RPM 后构建 GCC。这样本地单命令入口和
+GitHub Actions 的阶段边界保持一致，不会维护两套构建逻辑。
+
+```bash
+./build-rpms.sh --jobs 4
+```
+
+本地需要单独排查某个阶段时，可以运行：
+
+```bash
+./build-rpms.sh --stage prerequisites --jobs 4
+./build-rpms.sh --stage gcc --seed-dir out --jobs 4
+```
+
+CI 将前置 RPM 作为短期工件传给 GCC 作业；GCC 作业再次导出它们和新生成的 GCC
+RPM，因此后续验收和发布仍只消费一份完整产物集。
+
 ## 4. GCC 关键配置
 
 `gcc12-toolset-gcc.spec` 使用：
