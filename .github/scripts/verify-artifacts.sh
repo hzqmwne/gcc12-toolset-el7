@@ -26,6 +26,8 @@ docker run --rm \
 
         yum -y localinstall /out/RPMS/*.rpm
 
+        rpm -q gcc12-toolset-toolchain gcc12-toolset-make
+
         [[ $(readlink -f /usr/bin/gcc) == "$system_gcc" ]]
         [[ $(readlink -f /usr/bin/g++) == "$system_gxx" ]]
         [[ $(rpm -qf /usr/bin/gcc) == "$system_gcc_owner" ]]
@@ -63,6 +65,8 @@ EOF
 
         source /opt/gcc12-toolset/enable full
         [[ $(command -v gcc) == /opt/gcc12-toolset/root/usr/bin/gcc ]]
+        [[ $(command -v make) == /opt/gcc12-toolset/root/usr/bin/make ]]
+        make --version | head -n1 | grep -F "GNU Make 4.3" >/dev/null
         gcc -Wall -Wextra -Werror "$work/hello.c" -o "$work/hello-toolset"
         "$work/hello-toolset"
 

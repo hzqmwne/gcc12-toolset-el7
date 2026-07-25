@@ -17,6 +17,7 @@ prepare_rpmbuild() {
     cp -a "$CACHE/gcc-12.2.1-20221121.tar.xz" "$TOPDIR/SOURCES/"
     cp -a "$CACHE/isl-0.24.tar.bz2" "$TOPDIR/SOURCES/"
     cp -a "$CACHE/binutils-2.36.1.tar.xz" "$TOPDIR/SOURCES/"
+    cp -a "$CACHE/make-4.3.tar.gz" "$TOPDIR/SOURCES/"
     cp -a "$CACHE/gcc12-libstdc++-compat.patch" "$TOPDIR/SOURCES/"
 }
 
@@ -27,6 +28,11 @@ build_runtime() {
 build_binutils() {
     rpmbuild --define "_topdir $TOPDIR" --define "_smp_mflags -j$JOBS" \
         -ba "$TOPDIR/SPECS/gcc12-toolset-binutils.spec"
+}
+
+build_make() {
+    rpmbuild --define "_topdir $TOPDIR" --define "_smp_mflags -j$JOBS" \
+        -ba "$TOPDIR/SPECS/gcc12-toolset-make.spec"
 }
 
 build_gcc() {

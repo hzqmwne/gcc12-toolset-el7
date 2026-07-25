@@ -17,6 +17,7 @@ glibc 2.17
 GCC:      gcc-12.2.1-20221121.tar.xz
 ISL:      isl-0.24.tar.bz2
 binutils: binutils-2.36.1.tar.xz
+make:     make-4.3.tar.gz
 ```
 
 GCC 源码来自 CentOS 归档 `devtoolset-12-gcc-12.2.1-4.1.el7` 使用的快照。`full` 构建保持完整 dual ABI；`compat` 源码副本应用同一归档提交中的 `gcc12-libstdc++-compat.patch`，生成官方 DTS 风格的 patched headers 和 `libstdc++_nonshared48.a`。
@@ -36,6 +37,9 @@ isl-0.24.tar.bz2
 
 binutils-2.36.1.tar.xz
   021c97cc0e751e989afb8db025fbd2ae48391831
+
+make-4.3.tar.gz
+  SHA-256 e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19
 
 gcc12-libstdc++-compat.patch
   SHA-256 7a5b89af6fc10a00e61b374b86c49591bd7696cc2b518f3ecad6568033967aa5
@@ -83,7 +87,7 @@ JOBS=16 IMAGE=internal/gcc12-builder:el7 ./build-rpms.sh
 ### 3.1 分阶段执行
 
 `build-rpms.sh` 默认以两个 Docker 阶段串行完成完整构建：`prerequisites`
-构建 runtime/binutils，`gcc` 导入这些 RPM 后构建 GCC。这样本地单命令入口和
+构建 runtime/binutils/GNU Make，`gcc` 导入这些 RPM 后构建 GCC。这样本地单命令入口和
 GitHub Actions 的阶段边界保持一致，不会维护两套构建逻辑。
 
 ```bash
@@ -103,7 +107,7 @@ RPM，因此后续验收和发布仍只消费一份完整产物集。
 ### 3.2 快速反馈循环
 
 手动 Actions 运行可选择 `preflight`（静态检查）、`prerequisites`（额外构建
-runtime/binutils）或 `full`（完整构建与消费者验收）。tag 触发不接受降级，始终
+runtime/binutils/GNU Make）或 `full`（完整构建与消费者验收）。tag 触发不接受降级，始终
 运行 `full`。本地可用同一检查脚本快速验证脚本和仓库元数据：
 
 ```bash
@@ -384,6 +388,7 @@ spec 使用 RPM provides 过滤，避免私有 `libstdc++.so.6` 被误认为可�
 
 ```text
 gcc12-toolset-runtime
+gcc12-toolset-toolchain
 gcc12-toolset-libgcc
 gcc12-toolset-libstdc++
 ```

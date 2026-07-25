@@ -106,7 +106,7 @@ jobs:
       - name: Fetch and verify locked sources
         run: bash ./fetch-sources.sh cache
 
-      - name: Build runtime and binutils RPMs
+      - name: Build runtime, binutils, and GNU Make RPMs
         run: |
           command=(bash)
           if [[ '${{ inputs.trace }}' == true ]]; then

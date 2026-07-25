@@ -63,7 +63,7 @@ GCC 三阶段 bootstrap 以及第二套 compat libstdc++ 构建通常耗时较�
 
 ## 分阶段本地构建
 
-默认命令仍会在两个容器阶段中依次构建 runtime、binutils 和 GCC：
+默认命令仍会在两个容器阶段中依次构建 runtime、binutils、GNU Make 和 GCC：
 
 ```bash
 ./build-rpms.sh --jobs 4
@@ -76,13 +76,13 @@ GCC 三阶段 bootstrap 以及第二套 compat libstdc++ 构建通常耗时较�
 ./build-rpms.sh --stage gcc --seed-dir out --jobs 4
 ```
 
-第二个命令会导入第一个命令产出的 runtime/binutils RPM；最终 `out/` 与默认
+第二个命令会导入第一个命令产出的 runtime/binutils/GNU Make RPM；最终 `out/` 与默认
 单命令流程一样包含完整的二进制 RPM、SRPM 和校验清单。
 
 ## 快速反馈
 
 GitHub Actions 的手动运行提供三种深度：`preflight` 只执行仓库、shell 和入口
-检查；`prerequisites` 额外构建 runtime/binutils RPM；`full` 执行完整构建和消费者
+检查；`prerequisites` 额外构建 runtime/binutils/GNU Make RPM；`full` 执行完整构建和消费者
 验收。tag 触发始终执行 `full`，因此不会降低正式发布验证。相同的快速静态检查可在
 本地运行：
 
@@ -94,7 +94,9 @@ bash .github/scripts/preflight.sh
 
 ```text
 gcc12-toolset-runtime
+gcc12-toolset-toolchain
 gcc12-toolset-binutils
+gcc12-toolset-make
 gcc12-toolset-gcc
 gcc12-toolset-gcc-c++
 gcc12-toolset-libgcc
@@ -109,6 +111,8 @@ gcc12-toolset-libstdc++-compat
 ```bash
 yum localinstall out/RPMS/*.rpm
 ```
+
+`gcc12-toolset-toolchain` 是 DTS 风格的完整 C/C++ 开发元包，会安装 runtime、binutils、GCC、G++ 和 GNU Make 4.3。启用任一 profile 后，`make` 会解析为 `/opt/gcc12-toolset/root/usr/bin/make`。CMake 不属于 DTS 12 核心 toolchain，因此不包含在元包内；如有需要，应作为独立可选组件维护。
 
 ## 使用
 

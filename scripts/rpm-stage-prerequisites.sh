@@ -8,6 +8,7 @@ prepare_rpmbuild
 build_runtime
 install_prerequisite gcc12-toolset-runtime
 build_binutils
+build_make
 export_rpms
 
 printf 'Prerequisite RPM build completed: %s/RPMS\n' "$OUT"

@@ -17,6 +17,12 @@ BINUTILS_URL=https://ftpmirror.gnu.org/binutils/binutils-2.36.1.tar.xz
 BINUTILS_FALLBACK_URL=https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz
 BINUTILS_SHA1=021c97cc0e751e989afb8db025fbd2ae48391831
 
+# GNU Make version shipped by Developer Toolset 12.
+MAKE_SOURCE=make-4.3.tar.gz
+MAKE_URL=https://ftpmirror.gnu.org/make/make-4.3.tar.gz
+MAKE_FALLBACK_URL=https://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+MAKE_SHA256=e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19
+
 # Red Hat/CentOS DTS 12 compatibility model for RHEL 6/7 system libstdc++.
 LIBSTDCXX_COMPAT_PATCH=gcc12-libstdc++-compat.patch
 LIBSTDCXX_COMPAT_PATCH_URL=https://gitlab.com/CentOS/archives/git.centos.org/rpms/devtoolset-12-gcc/-/raw/5e6e6db9f32771a6542d4fcc5a5e898e44b9491f/SOURCES/gcc12-libstdc++-compat.patch

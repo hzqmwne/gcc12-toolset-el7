@@ -1,6 +1,6 @@
 Name:           gcc12-toolset-runtime
 Version:        1.0
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Runtime launcher and filesystem layout for gcc12-toolset
 License:        MIT
 BuildArch:      noarch
@@ -14,6 +14,18 @@ Source5:        enable-compat
 %description
 Filesystem layout and environment launchers for an isolated GCC 12 toolset.
 The package does not replace the CentOS system compiler or system libstdc++.
+
+%package -n gcc12-toolset-toolchain
+Summary:        Complete C/C++ development toolchain for gcc12-toolset
+Requires:       gcc12-toolset-runtime%{?_isa} = %{version}-%{release}
+Requires:       gcc12-toolset-binutils%{?_isa}
+Requires:       gcc12-toolset-gcc%{?_isa}
+Requires:       gcc12-toolset-gcc-c++%{?_isa}
+Requires:       gcc12-toolset-make%{?_isa}
+
+%description -n gcc12-toolset-toolchain
+The DTS-style convenience package for the complete gcc12-toolset C/C++
+development environment: runtime activation, binutils, GCC, G++, and GNU Make.
 
 %prep
 
@@ -49,7 +61,12 @@ install -m 0644 %{SOURCE5} %{buildroot}/opt/gcc12-toolset/enable-compat
 /usr/bin/gcc12-toolset-full
 /usr/bin/gcc12-toolset-compat
 
+%files -n gcc12-toolset-toolchain
+
 %changelog
+* Sat Jul 25 2026 Toolset Builder <builder@localhost> - 1.0-7
+- Add the DTS-style toolchain meta package
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 1.0-6
 - Rebuild with the private ISL installation directory correction
 

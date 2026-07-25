@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -28,7 +28,6 @@ Requires:       gcc12-toolset-binutils
 Requires:       gcc12-toolset-libgcc%{?_isa} = %{version}-%{release}
 Requires:       gcc12-toolset-libstdc++%{?_isa} = %{version}-%{release}
 Requires:       /usr/lib/libc.so /usr/lib64/libc.so
-Requires:       make
 
 %description
 A private GCC 12 compiler built on CentOS 7/glibc 2.17. Unlike the official
@@ -342,6 +341,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Sat Jul 25 2026 Toolset Builder <builder@localhost> - 12.2.1-7
+- Let the toolchain meta package, rather than the compiler, require GNU Make
+
 * Fri Jul 24 2026 Toolset Builder <builder@localhost> - 12.2.1-6
 - Create the private GCC dependency directory before installing libisl
 
