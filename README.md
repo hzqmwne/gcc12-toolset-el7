@@ -79,6 +79,17 @@ GCC 三阶段 bootstrap 以及第二套 compat libstdc++ 构建通常耗时较�
 第二个命令会导入第一个命令产出的 runtime/binutils RPM；最终 `out/` 与默认
 单命令流程一样包含完整的二进制 RPM、SRPM 和校验清单。
 
+## 快速反馈
+
+GitHub Actions 的手动运行提供三种深度：`preflight` 只执行仓库、shell 和入口
+检查；`prerequisites` 额外构建 runtime/binutils RPM；`full` 执行完整构建和消费者
+验收。tag 触发始终执行 `full`，因此不会降低正式发布验证。相同的快速静态检查可在
+本地运行：
+
+```bash
+bash .github/scripts/preflight.sh
+```
+
 ## RPM 列表
 
 ```text

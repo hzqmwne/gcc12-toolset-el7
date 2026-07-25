@@ -31,13 +31,35 @@ if rpm -q --provides "$full_runtime_package" \
     exit 1
 fi
 
+check_gcc_requirement() {
+    local package=$1 requirement providers
+
+    while IFS= read -r requirement; do
+        [[ $requirement =~ $private_gcc_soname ]] || continue
+
+        # libgcc_s and libstdc++ are valid ABI dependencies when the base EL7
+        # packages provide them. The private copies are excluded from RPM
+        # provides, so only reject either capability if a toolset RPM provides it.
+        case "$requirement" in
+            libgcc_s.so.*|libstdc++.so.*)
+                providers=$(rpm -q --whatprovides "$requirement" 2>/dev/null || :)
+                if grep -q '^gcc12-toolset-' <<<"$providers"; then
+                    printf '%s requires a private GCC runtime capability: %s\n' \
+                        "$package" "$requirement" >&2
+                    exit 1
+                fi
+                ;;
+            *)
+                printf '%s has an unresolved public dependency on a private GCC library: %s\n' \
+                    "$package" "$requirement" >&2
+                exit 1
+                ;;
+        esac
+    done < <(rpm -q --requires "$package")
+}
+
 while IFS= read -r package; do
-    if rpm -q --requires "$package" \
-        | grep -E "$private_gcc_soname" >/dev/null; then
-        printf '%s has an unresolved public dependency on a private GCC library\n' \
-            "$package" >&2
-        exit 1
-    fi
+    check_gcc_requirement "$package"
     if rpm -q --provides "$package" \
         | grep -E "$private_gcc_soname" >/dev/null; then
         printf '%s exposes a private GCC runtime as a system RPM capability\n' \

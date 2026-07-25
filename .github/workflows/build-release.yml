@@ -22,6 +22,15 @@ on:
         required: true
         default: true
         type: boolean
+      mode:
+        description: Validation depth for manually started runs
+        required: true
+        default: full
+        type: choice
+        options:
+          - preflight
+          - prerequisites
+          - full
   push:
     tags:
       - "v*.*.*"
@@ -31,8 +40,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: Preflight checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate repository and scripts
+        run: bash .github/scripts/preflight.sh
+
   prerequisites:
     name: Build prerequisite RPMs
+    needs: preflight
+    if: ${{ github.event_name == 'push' || inputs.mode != 'preflight' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
@@ -49,9 +77,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Validate release metadata and repository
-        run: python3 .github/scripts/check-repository.py
 
       - name: Record initial runner state
         run: |
@@ -129,6 +154,7 @@ jobs:
   build:
     name: Build GCC RPMs
     needs: prerequisites
+    if: ${{ github.event_name == 'push' || inputs.mode == 'full' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     permissions:
@@ -145,9 +171,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Validate release metadata and repository
-        run: python3 .github/scripts/check-repository.py
 
       - name: Record initial runner state
         run: |

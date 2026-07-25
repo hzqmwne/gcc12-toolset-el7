@@ -100,6 +100,16 @@ GitHub Actions 的阶段边界保持一致，不会维护两套构建逻辑。
 CI 将前置 RPM 作为短期工件传给 GCC 作业；GCC 作业再次导出它们和新生成的 GCC
 RPM，因此后续验收和发布仍只消费一份完整产物集。
 
+### 3.2 快速反馈循环
+
+手动 Actions 运行可选择 `preflight`（静态检查）、`prerequisites`（额外构建
+runtime/binutils）或 `full`（完整构建与消费者验收）。tag 触发不接受降级，始终
+运行 `full`。本地可用同一检查脚本快速验证脚本和仓库元数据：
+
+```bash
+bash .github/scripts/preflight.sh
+```
+
 ## 4. GCC 关键配置
 
 `gcc12-toolset-gcc.spec` 使用：
