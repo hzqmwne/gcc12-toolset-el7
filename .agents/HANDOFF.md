@@ -32,5 +32,6 @@
   GCC 12.2.1 的 `<stacktrace>` 中 `basic_stacktrace::max_size()` 访问了不存在的 `_M_alloc` 成员。
   修复应避免该已知缺陷路径，保留 `current()`、`empty()` 与 `size()` 的编译和运行覆盖；该测试修复
   不改变 RPM 载荷，core Release 无需递增。
-- 后续：对 stacktrace smoke 测试修复运行本地 preflight，提交并推送；然后以默认 full 输入调度一次
-  full 验证。除非收到明确发布请求，不创建或移动发布标签。
+- `1458c82` 以 `current()`、`empty()` 和 `size()` 替换有缺陷的 `max_size()` 覆盖路径；本地 preflight
+  与 `git diff --check` 已通过。Full Run `30205860661` 已针对该提交以默认输入启动；不要频繁轮询。
+- 若该 run 成功，更新本节；若失败，优先只读取失败 job 的精简日志。除非收到明确发布请求，不创建或移动发布标签。
