@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`abf99f3 fix: backport GCC 12 stacktrace max_size`
+- 当前 HEAD：`89f2ff9 docs: record stacktrace backport validation`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -35,6 +35,9 @@
   nonshared archive 和 DTS 测试条件。应采用最小源码 backport，恢复 `max_size()` smoke 覆盖。
   该载荷变更需要 runtime、binutils 和 gcc 三个 core spec 同步递增 Release 并添加 changelog。
 - 运行 `30205860661` 针对已废弃的测试绕过提交启动，已取消。`abf99f3` 已添加源码 backport，恢复
-  `max_size()` smoke；core Release 均为 10。本地 preflight 与 `git diff --check` 已通过。
-- Run `30206229733`（prerequisites）和 Run `30206231380`（full）已针对 `abf99f3` 以默认输入启动；
-  不要频繁轮询。若失败，优先只读取失败 job 的精简日志。除非收到明确发布请求，不创建或移动发布标签。
+  `max_size()` smoke；core Release 均为 10。Run `30206229733` 的 prerequisites 成功；Run
+  `30206231380` 在 GCC `%prep` 失败。补丁目标行正确，但 hunk 的周边上下文与锁定 DTS 源快照不一致，
+  严格 `--fuzz=0` 拒绝应用。改用仅匹配目标行的零上下文 hunk；同时将新增 changelog 的 weekday 改正。
+- 手动 Actions 的 `jobs` 输入改为自由文本，无范围校验；公共 `ubuntu-24.04` runner 为 4 vCPU/16 GiB，
+  默认值保留为 4，较高值会过度订阅而非合理加速。后续：运行 preflight，提交推送并以默认输入调度 full。
+  除非收到明确发布请求，不创建或移动发布标签。

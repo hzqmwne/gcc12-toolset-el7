@@ -72,7 +72,7 @@ LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
 %{toolset_prefix}/share/man/man1/*
 
 %changelog
-* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 2.36.1-10
+* Sun Jul 26 2026 Toolset Builder <builder@localhost> - 2.36.1-10
 - Rebuild with the GCC stacktrace max_size backport
 
 * Sat Jul 26 2026 Toolset Builder <builder@localhost> - 2.36.1-9

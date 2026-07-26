@@ -4,14 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       jobs:
-        description: GCC build parallelism
+        description: GCC build parallelism (free-form)
         required: true
         default: "4"
-        type: choice
-        options:
-          - "1"
-          - "2"
-          - "4"
+        type: string
       trace:
         description: Enable host-side bash tracing
         required: true

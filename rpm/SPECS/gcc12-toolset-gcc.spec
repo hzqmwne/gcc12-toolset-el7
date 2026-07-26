@@ -343,7 +343,7 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
-* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-10
+* Sun Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-10
 - Backport the GCC 12 stacktrace max_size allocator lookup fix
 
 * Sat Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-9

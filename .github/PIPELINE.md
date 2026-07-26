@@ -45,7 +45,8 @@ RPM Release 继续由各自 spec 独立管理，避免把平台发布版本混�
 
 在 Actions 页面手动运行 `Build and Release`：
 
-- `jobs` 可选 1、2 或 4；内存不足时选择 1；
+- `jobs` 可自由输入；默认 4。公共 `ubuntu-24.04` runner 有 4 vCPU，超过 4
+  通常只会导致过度订阅，不会加快 GCC bootstrap；
 - `trace` 会用 `bash -x` 输出主机侧构建脚本跟踪；
 - `free_disk` 会清理 runner 上与本项目无关的预装 SDK，给 GCC bootstrap
   留出空间。
@@ -55,7 +56,7 @@ RPM Release 继续由各自 spec 独立管理，避免把平台发布版本混�
 中已经生成的清单。实测 `jobs=4` 构建阶段约 63 分钟，宿主峰值已用内存约
 5.04 GiB、最低可用内存约 10.57 GiB，构建容器峰值内存约 30%，因此作为
 4 vCPU/16 GiB 公共 runner 的默认值；遇到不同 runner 或内存压力时可手动
-降为 2 或 1。验收 job 另外上传 `verification-diagnostics-*`。GitHub 的
+降低。验收 job 另外上传 `verification-diagnostics-*`。GitHub 的
 “Re-run failed jobs” 会复用成功构建 job 保存的 RPM，只重跑消费者验收、
 打包和证明。
 
