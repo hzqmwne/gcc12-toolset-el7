@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -341,6 +341,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-9
+- Rebuild with corrected toolchain meta package dependencies
+
 * Sun Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-8
 - Statically link the private ISL prerequisite into GCC frontends
 

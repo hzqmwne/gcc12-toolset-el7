@@ -7,7 +7,7 @@
 
 Name:           gcc12-toolset-binutils
 Version:        2.36.1
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Private binutils for gcc12-toolset
 License:        GPLv3+
 URL:            https://www.gnu.org/software/binutils/
@@ -72,6 +72,9 @@ LD_LIBRARY_PATH=%{buildroot}%{binutils_libdir} \
 %{toolset_prefix}/share/man/man1/*
 
 %changelog
+* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 2.36.1-9
+- Rebuild with corrected toolchain meta package dependencies
+
 * Sun Jul 26 2026 Toolset Builder <builder@localhost> - 2.36.1-8
 - Rebuild with statically linked GCC ISL
 

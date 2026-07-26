@@ -1,6 +1,6 @@
 Name:           gcc12-toolset-runtime
 Version:        1.0
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Runtime launcher and filesystem layout for gcc12-toolset
 License:        MIT
 BuildArch:      noarch
@@ -17,7 +17,7 @@ The package does not replace the CentOS system compiler or system libstdc++.
 
 %package -n gcc12-toolset-toolchain
 Summary:        Complete C/C++ development toolchain for gcc12-toolset
-Requires:       gcc12-toolset-runtime%{?_isa} = %{version}-%{release}
+Requires:       gcc12-toolset-runtime = %{version}-%{release}
 Requires:       gcc12-toolset-binutils%{?_isa}
 Requires:       gcc12-toolset-gcc%{?_isa}
 Requires:       gcc12-toolset-gcc-c++%{?_isa}
@@ -64,6 +64,9 @@ install -m 0644 %{SOURCE5} %{buildroot}/opt/gcc12-toolset/enable-compat
 %files -n gcc12-toolset-toolchain
 
 %changelog
+* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 1.0-9
+- Keep the noarch toolchain meta package's runtime dependency architecture-neutral
+
 * Sun Jul 26 2026 Toolset Builder <builder@localhost> - 1.0-8
 - Rebuild with statically linked GCC ISL
 
