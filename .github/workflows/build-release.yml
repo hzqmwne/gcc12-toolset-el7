@@ -35,10 +35,6 @@ on:
     tags:
       - "v*.*.*"
 
-concurrency:
-  group: toolchain-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   preflight:
     name: Preflight checks
