@@ -9,9 +9,7 @@ to compile.  Keep the upstream implementation and correct that member lookup.
 
 --- a/libstdc++-v3/include/std/stacktrace
 +++ b/libstdc++-v3/include/std/stacktrace
-@@ -471,10 +471,10 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
-       [[nodiscard]] bool empty() const noexcept { return size() == 0; }
-       size_type size() const noexcept { return _M_impl._M_size; }
+@@ -473,7 +473,7 @@
 
        size_type
        max_size() const noexcept
@@ -20,4 +18,3 @@ to compile.  Keep the upstream implementation and correct that member lookup.
 
        const_reference
        operator[](size_type __n) const noexcept
-       {

@@ -38,10 +38,11 @@
   `max_size()` smoke；core Release 均为 10。Run `30206229733` 的 prerequisites 成功；Run
   `30206231380` 在 GCC `%prep` 失败。补丁目标行正确，但 hunk 的周边上下文与锁定 DTS 源快照不一致，
   严格 `--fuzz=0` 拒绝应用。改用仅匹配目标行的零上下文 hunk；同时将新增 changelog 的 weekday 改正。
-- `766bf91` 的零上下文临时补丁尚未作为最终形式保留。已根据 GCC 12.2 发布分支中锁定 DTS 源快照的
-  真实第 471–480 行上下文重写补丁，并在 spec 和补丁头中记录其 backport 状态。手动 Actions 的 `jobs`
+- `766bf91` 的零上下文临时补丁尚未作为最终形式保留。此前手写上下文 hunk 仍被严格 `--fuzz=0` 拒绝；
+  已在 WSL 临时目录中从真实 GCC 12.2 头文件生成第 473–479 行的 unified diff，并验证严格 dry-run、
+  实际应用和结果断言均成功，临时目录已删除。spec 和补丁头记录其 backport 状态。手动 Actions 的 `jobs`
   输入现为自由文本，无范围校验；公共
   `ubuntu-24.04` runner 为 4 vCPU/16 GiB，默认值保留为 4，较高值会过度订阅而非合理加速。
-- `ebd85ea` 的标准上下文补丁已通过本地 preflight 和 `git diff --check`。Run `30206849625`
-  （prerequisites）和 Run `30206850982`（full）已针对该提交以默认输入启动；不要频繁轮询。
-  除非收到明确发布请求，不创建或移动发布标签。
+- Run `30206849625` 的 prerequisites 成功；Run `30206850982` 的 full 在旧手写 hunk 的 GCC `%prep` 失败。
+  后续：对 WSL 验证的补丁运行 preflight，提交推送并以默认输入重新调度 prerequisites 和 full。除非收到
+  明确发布请求，不创建或移动发布标签。
