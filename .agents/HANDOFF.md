@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`f703ede docs: record stacktrace validation run`
+- 当前 HEAD：`abf99f3 fix: backport GCC 12 stacktrace max_size`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -34,5 +34,7 @@
 - DTS 12 的公开 `c8s` 与 `c10s` 源包补丁集没有 stacktrace 回避或修复补丁；它们只处理兼容 ABI、
   nonshared archive 和 DTS 测试条件。应采用最小源码 backport，恢复 `max_size()` smoke 覆盖。
   该载荷变更需要 runtime、binutils 和 gcc 三个 core spec 同步递增 Release 并添加 changelog。
-- 运行 `30205860661` 针对已废弃的测试绕过提交启动，已取消。后续：静态验证 backport 补丁、运行 preflight，
-  提交并推送；然后以默认输入调度 full。除非收到明确发布请求，不创建或移动发布标签。
+- 运行 `30205860661` 针对已废弃的测试绕过提交启动，已取消。`abf99f3` 已添加源码 backport，恢复
+  `max_size()` smoke；core Release 均为 10。本地 preflight 与 `git diff --check` 已通过。
+- Run `30206229733`（prerequisites）和 Run `30206231380`（full）已针对 `abf99f3` 以默认输入启动；
+  不要频繁轮询。若失败，优先只读取失败 job 的精简日志。除非收到明确发布请求，不创建或移动发布标签。
