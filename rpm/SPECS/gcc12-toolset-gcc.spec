@@ -16,6 +16,7 @@ Source0:        gcc-12.2.1-20221121.tar.xz
 Source1:        gcc12-toolset-g++-compat
 Source2:        isl-0.24.tar.bz2
 Patch0:         gcc12-libstdc++-compat.patch
+# Backport: correct GCC 12.2.1 stacktrace max_size allocator lookup.
 Patch1:         gcc12-stacktrace-max-size.patch
 BuildRequires:  gcc, gcc-c++, make
 BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, zlib-devel

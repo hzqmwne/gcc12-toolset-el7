@@ -38,8 +38,9 @@
   `max_size()` smoke；core Release 均为 10。Run `30206229733` 的 prerequisites 成功；Run
   `30206231380` 在 GCC `%prep` 失败。补丁目标行正确，但 hunk 的周边上下文与锁定 DTS 源快照不一致，
   严格 `--fuzz=0` 拒绝应用。改用仅匹配目标行的零上下文 hunk；同时将新增 changelog 的 weekday 改正。
-- `766bf91` 将补丁收窄为只匹配已确认的错误行，修正新增 changelog weekday；本地 preflight 与
-  `git diff --check` 已通过。手动 Actions 的 `jobs` 输入现为自由文本，无范围校验；公共
+- `766bf91` 的零上下文临时补丁尚未作为最终形式保留。已根据 GCC 12.2 发布分支中锁定 DTS 源快照的
+  真实第 471–480 行上下文重写补丁，并在 spec 和补丁头中记录其 backport 状态。手动 Actions 的 `jobs`
+  输入现为自由文本，无范围校验；公共
   `ubuntu-24.04` runner 为 4 vCPU/16 GiB，默认值保留为 4，较高值会过度订阅而非合理加速。
-- Run `30206693114`（prerequisites）和 Run `30206695774`（full）已针对 `766bf91` 以默认输入启动；
-  不要频繁轮询。若失败，优先只读取失败 job 的精简日志。除非收到明确发布请求，不创建或移动发布标签。
+- Runs `30206693114` 和 `30206695774` 针对旧零上下文补丁启动，已取消。后续：运行 preflight，提交推送，
+  并以默认输入重新调度 prerequisites 与 full。不要频繁轮询；除非收到明确发布请求，不创建或移动发布标签。
