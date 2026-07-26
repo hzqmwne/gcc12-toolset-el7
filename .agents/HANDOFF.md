@@ -11,8 +11,8 @@ next action. Stable policy belongs in `../AGENTS.md`.
 - Workspace: `C:\Users\hz\home\repository\gcc12-toolset-el7`
 - GitHub: `hzqmwne/gcc12-toolset-el7`
 - Branch: `main`
-- Current pushed HEAD: `5e41bc0 feat: add DTS-style make toolchain`
-- Worktree was clean when this handoff was written.
+- Latest functional commit: `5e41bc0 feat: add DTS-style make toolchain`
+- The handoff documentation itself may be newer than that functional baseline.
 - `v1.0.0` is immutable.
 
 Recent relevant commits:
@@ -102,4 +102,3 @@ Recommended correction in `gcc12-toolset-make.spec`:
 
 After the next milestone, replace this failure section with the new commit,
 run IDs, results, and remaining blocker rather than appending a full history.
-
