@@ -7,10 +7,9 @@
 
 ## 仓库状态
 
-- 工作区：`C:\Users\hz\home\repository\gcc12-toolset-el7`
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`f67fecc ci: validate RPM spec dependency invariants`
+- 当前 HEAD：`00772f1 docs: update maintenance handoff`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -28,6 +27,10 @@
   `gcc12-toolset-toolchain` 错误依赖 `gcc12-toolset-runtime(x86-64)`。`c630ed0` 已修复为
   架构无关依赖，三个 core Release 同步为 9。
 - `f67fecc` 新增 preflight：core Release 同步，以及 noarch spec 不得对自身主包名使用 `%{?_isa}`。
-- 最新 full Run `30199711627` 针对 `f67fecc` 已启动（`jobs=4`、`free_disk=true`、`trace=false`）；
-  用户会在完成后通知。不要频繁轮询。
-- 若该 full 失败，优先下载失败 job 的精简日志；若成功，更新本节并评估是否创建新发布标签（仅限明确请求）。
+- Full Run `30199711627`（`f67fecc`）的前置 RPM、GCC RPM、干净 CentOS 7 安装、RPM 隔离、ABI、
+  profile、运行时和 multilib 检查均成功。失败仅在 `smoke-features.sh` 的 C++23 stacktrace smoke：
+  GCC 12.2.1 的 `<stacktrace>` 中 `basic_stacktrace::max_size()` 访问了不存在的 `_M_alloc` 成员。
+  修复应避免该已知缺陷路径，保留 `current()`、`empty()` 与 `size()` 的编译和运行覆盖；该测试修复
+  不改变 RPM 载荷，core Release 无需递增。
+- 后续：对 stacktrace smoke 测试修复运行本地 preflight，提交并推送；然后以默认 full 输入调度一次
+  full 验证。除非收到明确发布请求，不创建或移动发布标签。
