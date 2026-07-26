@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -16,6 +16,7 @@ Source0:        gcc-12.2.1-20221121.tar.xz
 Source1:        gcc12-toolset-g++-compat
 Source2:        isl-0.24.tar.bz2
 Patch0:         gcc12-libstdc++-compat.patch
+Patch1:         gcc12-stacktrace-max-size.patch
 BuildRequires:  gcc, gcc-c++, make
 BuildRequires:  gmp-devel, mpfr-devel, libmpc-devel, zlib-devel
 BuildRequires:  flex, bison, texinfo, gettext, binutils
@@ -90,6 +91,7 @@ are shared with the full profile.
 
 %prep
 %setup -q -n gcc-12.2.1-20221121 -a 2
+%patch1 -p1
 cd ..
 rm -rf gcc-12.2.1-20221121-compat
 cp -a gcc-12.2.1-20221121 gcc-12.2.1-20221121-compat
@@ -341,6 +343,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Sat Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-10
+- Backport the GCC 12 stacktrace max_size allocator lookup fix
+
 * Sat Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-9
 - Rebuild with corrected toolchain meta package dependencies
 

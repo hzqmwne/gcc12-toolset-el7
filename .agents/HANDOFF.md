@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`00772f1 docs: update maintenance handoff`
+- 当前 HEAD：`f703ede docs: record stacktrace validation run`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -29,9 +29,10 @@
 - `f67fecc` 新增 preflight：core Release 同步，以及 noarch spec 不得对自身主包名使用 `%{?_isa}`。
 - Full Run `30199711627`（`f67fecc`）的前置 RPM、GCC RPM、干净 CentOS 7 安装、RPM 隔离、ABI、
   profile、运行时和 multilib 检查均成功。失败仅在 `smoke-features.sh` 的 C++23 stacktrace smoke：
-  GCC 12.2.1 的 `<stacktrace>` 中 `basic_stacktrace::max_size()` 访问了不存在的 `_M_alloc` 成员。
-  修复应避免该已知缺陷路径，保留 `current()`、`empty()` 与 `size()` 的编译和运行覆盖；该测试修复
-  不改变 RPM 载荷，core Release 无需递增。
-- `1458c82` 以 `current()`、`empty()` 和 `size()` 替换有缺陷的 `max_size()` 覆盖路径；本地 preflight
-  与 `git diff --check` 已通过。Full Run `30205860661` 已针对该提交以默认输入启动；不要频繁轮询。
-- 若该 run 成功，更新本节；若失败，优先只读取失败 job 的精简日志。除非收到明确发布请求，不创建或移动发布标签。
+  GCC 12.2.1 的 `<stacktrace>` 中 `basic_stacktrace::max_size()` 将 allocator 错误地引用为
+  `_M_impl._M_alloc`，而它属于外层 `basic_stacktrace`。
+- DTS 12 的公开 `c8s` 与 `c10s` 源包补丁集没有 stacktrace 回避或修复补丁；它们只处理兼容 ABI、
+  nonshared archive 和 DTS 测试条件。应采用最小源码 backport，恢复 `max_size()` smoke 覆盖。
+  该载荷变更需要 runtime、binutils 和 gcc 三个 core spec 同步递增 Release 并添加 changelog。
+- 运行 `30205860661` 针对已废弃的测试绕过提交启动，已取消。后续：静态验证 backport 补丁、运行 preflight，
+  提交并推送；然后以默认输入调度 full。除非收到明确发布请求，不创建或移动发布标签。

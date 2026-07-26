@@ -89,7 +89,7 @@ cat > "$work/stacktrace.cc" <<'EOF'
 #include <stacktrace>
 int main() {
     const auto trace = std::stacktrace::current();
-    return trace.empty() && trace.size() != 0 ? 1 : 0;
+    return trace.size() <= trace.max_size() ? 0 : 1;
 }
 EOF
 g++ -O2 -std=c++23 -Wall -Wextra -Werror \
