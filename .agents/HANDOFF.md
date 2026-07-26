@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`766bf91 fix: apply stacktrace backport exactly`
+- 当前 HEAD：`ebd85ea fix: add stacktrace backport context`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -42,5 +42,6 @@
   真实第 471–480 行上下文重写补丁，并在 spec 和补丁头中记录其 backport 状态。手动 Actions 的 `jobs`
   输入现为自由文本，无范围校验；公共
   `ubuntu-24.04` runner 为 4 vCPU/16 GiB，默认值保留为 4，较高值会过度订阅而非合理加速。
-- Runs `30206693114` 和 `30206695774` 针对旧零上下文补丁启动，已取消。后续：运行 preflight，提交推送，
-  并以默认输入重新调度 prerequisites 与 full。不要频繁轮询；除非收到明确发布请求，不创建或移动发布标签。
+- `ebd85ea` 的标准上下文补丁已通过本地 preflight 和 `git diff --check`。Run `30206849625`
+  （prerequisites）和 Run `30206850982`（full）已针对该提交以默认输入启动；不要频繁轮询。
+  除非收到明确发布请求，不创建或移动发布标签。
