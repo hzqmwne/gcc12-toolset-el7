@@ -20,7 +20,7 @@ gcc12-toolset SCL environment and does not replace the CentOS 7 system make.
 %setup -q -n make-%{version}
 
 %build
-%configure --prefix=%{toolset_prefix}
+./configure --prefix=%{toolset_prefix} --disable-nls
 make %{?_smp_mflags}
 
 %install
@@ -34,6 +34,7 @@ test -x %{buildroot}%{toolset_prefix}/bin/make
 
 %files
 %{toolset_prefix}/bin/make
+%{toolset_prefix}/include/gnumake.h
 %{toolset_prefix}/share/info/make.info*
 %{toolset_prefix}/share/man/man1/make.1*
 

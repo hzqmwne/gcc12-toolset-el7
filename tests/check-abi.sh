@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source /opt/gcc12-toolset/enable full
+
 GXX=${GXX:-/opt/gcc12-toolset/root/usr/bin/g++}
 LIB=${LIBSTDCXX:-/opt/gcc12-toolset/root/usr/lib64/libstdc++.so.6}
 
