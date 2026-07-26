@@ -1,10 +1,10 @@
-# Changelog
+# 变更日志
 
 本项目使用语义化版本，发布标签格式为 `vMAJOR.MINOR.PATCH`。
 
 ## 1.0.1 - 2026-07-24
 
-- Fix the private ISL installation destination and rebuild every RPM at Release 6.
+- 修复私有 ISL 安装目标，并以 Release 6 重新构建全部 RPM。
 
 - 将 GCC 私有依赖目录加入两种 profile 的运行时搜索路径，并统一升级 RPM Release 到 `5`。
 - 在独立的全新 CentOS 7 开发机镜像中全量安装 RPM，验证系统 GCC 4.8.5

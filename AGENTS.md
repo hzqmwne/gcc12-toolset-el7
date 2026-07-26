@@ -1,86 +1,60 @@
-# Repository maintenance contract
+# 仓库维护约定
 
-This file contains stable instructions for automated and human maintainers.
-Read `.agents/HANDOFF.md` after this file for the current state and next task.
-Update this file only when a durable policy changes; keep run-specific details
-in the handoff.
+本文档记录自动化与人工维护者均须遵守的稳定规则。
+阅读完本文档后，继续阅读 `.agents/HANDOFF.md`，以获取当前状态和下一项任务。
+仅在持久性策略变化时更新本文档；每次运行的细节应记录在交接文档中。
 
-## Scope and invariants
+## 范围与不变量
 
-- Repository: `hzqmwne/gcc12-toolset-el7`; normal maintenance targets `main`.
-- All text files must be UTF-8 with Unix LF endings.
-- Build, RPM tests, consumer tests, and releases run only in GitHub Actions.
-  Local work is limited to editing, static checks, commits, and pushes.
-- Preserve manual `workflow_dispatch` modes and the `v*.*.*` tag release path.
-- Release `v1.0.0` is immutable: never move, replace, or republish that tag or
-  its assets.
-- Preserve complete SCL/devtoolset activation semantics. Toolset binaries and
-  private libraries are expected to work after an explicit launcher or
-  `source /opt/gcc12-toolset/enable`; do not silently replace system tools.
-- If an existing RPM payload changes, increment `Release` in all three core
-  specs (`runtime`, `binutils`, and `gcc`) together and add matching changelog
-  entries. A new, never-published component may start at Release 1.
-- The supported core is C/C++, binutils, runtime activation, and GNU Make.
-  Fortran is intentionally excluded. CMake is not part of the DTS 12 core
-  toolchain meta package; add it only later as a separately scoped component.
-- Normal in-scope edits, commits, pushes, manual Actions dispatches, and Actions
-  inspection are authorized. Do not create or move release tags without a
-  specific release request.
+- 仓库：`hzqmwne/gcc12-toolset-el7`；常规维护目标为 `main`。
+- 所有文本文件必须采用 UTF-8 编码与 Unix LF 换行。
+- 构建、RPM 测试、消费者测试与发布只能在 GitHub Actions 中进行。本地仅限编辑、静态检查、提交与推送。
+- 保留手动 `workflow_dispatch` 模式和 `v*.*.*` 标签发布路径。
+- Release `v1.0.0` 不可变：不得移动、替换或重新发布该标签及其资产。
+- 保留完整的 SCL/devtoolset 激活语义。工具集二进制与私有库应在显式 launcher 或执行
+  `source /opt/gcc12-toolset/enable` 后工作；不得悄然替换系统工具。
+- 如已有 RPM 的载荷发生变化，须将三个核心 spec（`runtime`、`binutils`、`gcc`）的
+  `Release` 一并递增，并添加对应 changelog。全新的、从未发布过的组件可从 Release 1 起始。
+- 支持的核心范围为 C/C++、binutils、运行时激活和 GNU Make。Fortran 有意排除。
+  CMake 不属于 DTS 12 核心工具链元包；只可在后续作为独立范围的组件加入。
+- 常规范围内的编辑、提交、推送、手动 Actions 调度和 Actions 检查均已获授权。除非收到明确发布请求，
+  不得创建或移动发布标签。
 
-## Validation and CI feedback
+## 验证与 CI 反馈
 
-Use the cheapest stage that can falsify the current hypothesis:
+以能最快证伪当前假设的阶段为先：
 
-1. Run local static checks and `.github/scripts/preflight.sh` when the local
-   environment supports it.
-2. Use manual `preflight` for repository-only changes.
-3. Use manual `prerequisites` for runtime, binutils, Make, source-lock, or
-   prerequisite-stage changes.
-4. Start `full` only after cheaper relevant checks pass, or when GCC/consumer
-   behavior itself must be validated.
-5. Re-run only failed jobs when their upstream artifacts are valid for the same
-   commit. Never reuse artifacts from a different commit as release evidence.
+1. 本地环境支持时运行静态检查和 `.github/scripts/preflight.sh`。
+2. 仅仓库文件变更使用手动 `preflight`。
+3. 运行时、binutils、Make、source-lock 或前置阶段变更使用手动 `prerequisites`。
+4. 仅在较便宜的相关检查通过后，或确实需要验证 GCC/消费者行为时，才启动 `full`。
+5. 只在上游工件来自同一提交且仍有效时重跑失败 job；不得将不同提交的工件作为发布证据。
 
-Default manual full-build inputs are `jobs=4`, `free_disk=true`, and
-`trace=false`. Avoid frequent polling: inspect once after dispatch, then wait
-for a job boundary, a user request, or enough elapsed time to expect progress.
-Prefer downloaded diagnostics or targeted failure-log tails over dumping an
-entire multi-hour log into the conversation.
+手动 full-build 的默认输入为 `jobs=4`、`free_disk=true`、`trace=false`。避免频繁轮询：
+调度后检查一次即可，之后等待 job 边界、用户请求，或足以预期进展的时间。优先下载诊断信息或查看有针对性的
+失败日志尾部，避免将数小时构建日志完整载入对话。
 
-## Agent and model orchestration
+## Agent 与模型编排
 
-Keep one primary agent responsible for repository mutations, integration,
-commits, pushes, and CI dispatch. Use subagents only for concrete, bounded work
-that can proceed independently, such as:
+一名主 agent 对仓库改动、集成、提交、推送和 CI 调度负责。仅在可独立推进的具体、边界明确任务中使用子 agent，
+例如：
 
-- read-only CI log triage for separate runs;
-- auditing one spec or one test family;
-- checking documentation or DTS feature parity;
-- reviewing a prepared diff for missed packaging or release invariants.
+- 分别只读分析不同运行的 CI 日志；
+- 审计一份 spec 或一组测试；
+- 检查文档或 DTS 功能对齐情况；
+- 审阅已准备好的 diff，查找遗漏的打包或发布不变量。
 
-Do not delegate the same files to multiple writing agents. By default,
-subagents should return evidence, file/line references, and a concise proposed
-change; the primary agent applies and validates the integrated patch. Two
-parallel subagents are normally enough. Do not spawn a subagent merely to
-summarize context or perform one quick search.
+不要让多个写入 agent 修改同一文件。默认情况下，子 agent 应返回证据、文件/行号和简明的建议改动；主 agent
+负责应用并验证集成补丁。通常两个并行子 agent 已足够。不要仅为总结上下文或一次简单搜索而启动子 agent。
 
-Cost-oriented model policy:
+模型成本策略：
 
-- Use a balanced model at low or medium reasoning for repository inventory,
-  status checks, documentation, formatting, and known mechanical edits.
-- Use the strongest coding model at high reasoning for RPM dependency design,
-  GCC/binutils configuration, ABI/runtime isolation, release correctness, or a
-  repeated CI failure whose cause is not yet established.
-- Reserve xhigh/max/ultra reasoning for ambiguous cross-component failures,
-  security/release incidents, or when high reasoning has already produced an
-  incomplete diagnosis.
-- Give subagents the smallest self-contained brief and only the recent turns
-  they need. Prefer `fork_turns="none"` plus explicit paths, run IDs, known
-  constraints, and the requested output for read-only audits. Use full-history
-  forks only when the subtask genuinely depends on conversational nuance.
+- 仓库盘点、状态检查、文档、格式化和已知的机械性修改使用低/中推理的均衡模型。
+- RPM 依赖设计、GCC/binutils 配置、ABI/运行时隔离、发布正确性，或原因未明的重复 CI 失败，
+  使用高推理的最强编码模型。
+- 仅在模糊的跨组件失败、安全/发布事故，或高推理仍未形成完整诊断时，使用 xhigh/max/ultra。
+- 向子 agent 提供最小且自包含的任务说明和必要的近期上下文。只读审计优先使用 `fork_turns="none"` 并显式提供
+  路径、运行 ID、已知约束和期望输出；只有确实依赖对话细节时才使用完整历史 fork。
 
-The long-lived primary conversation should retain decisions and integration
-state, not raw logs. Put durable rules here and update `.agents/HANDOFF.md` at
-milestones, before switching sessions, and whenever the current blocker or
-next validation step changes.
-
+长期主对话应保留决策与集成状态，而不是原始日志。在里程碑、切换会话前，或当前阻塞/下一步验证改变时，
+更新 `.agents/HANDOFF.md`。将持久规则写在本文档中。

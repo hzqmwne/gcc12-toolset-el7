@@ -1,104 +1,31 @@
-# Current maintenance handoff
+# 当前维护交接
 
-Last updated: 2026-07-26
+最后更新：2026-07-26
 
-This is a compact, evolving handoff rather than a transcript. Replace stale
-status when work advances; preserve only decisions and evidence that affect the
-next action. Stable policy belongs in `../AGENTS.md`.
+本文档是精简、持续演进的交接记录，而非历史流水账。状态推进时替换过时内容；只保留影响下一步的决策与证据。
+稳定策略位于 `../AGENTS.md`。
 
-## Repository state
+## 仓库状态
 
-- Workspace: `C:\Users\hz\home\repository\gcc12-toolset-el7`
-- GitHub: `hzqmwne/gcc12-toolset-el7`
-- Branch: `main`
-- Latest functional commit: `5e41bc0 feat: add DTS-style make toolchain`
-- The handoff documentation itself may be newer than that functional baseline.
-- `v1.0.0` is immutable.
+- 工作区：`C:\Users\hz\home\repository\gcc12-toolset-el7`
+- GitHub：`hzqmwne/gcc12-toolset-el7`
+- 分支：`main`
+- 当前 HEAD：`2371bb7 fix: statically link GCC ISL`
+- `v1.0.0` 不可变。
 
-Recent relevant commits:
+## 当前设计与证据
 
-- `5e41bc0 feat: add DTS-style make toolchain`
-- `fa5953d ci: add preflight validation mode`
-- `41b618f ci: split prerequisite and gcc builds`
-- `5c8551c fix: create private isl install directory`
-- `6594891 fix: expose private isl runtime`
-- `7390d7b fix: build private isl prerequisite`
+- CI 提供 `preflight`、`prerequisites` 与 `full`；前置 RPM 和 GCC RPM 通过同一提交 SHA 的工件传递。
+- Make 4.3 直接使用工具集 prefix 配置，并在 RPM 中拥有 `include/gnumake.h`。
+- ISL 0.24 在 GCC 构建目录中私有静态构建；GCC 前端不再打包或动态依赖 `libisl.so.23`。
+  `tests/check-abi.sh` 直接调用绝对路径的工具集 `g++`，验证这一需求。
+- runtime、binutils、gcc 三个 core spec 的 Release 已同步为 8；Make 保持未发布组件的 Release 1。
+- 本机指定 Python 的仓库检查、WSL preflight 和 `git diff --check` 均已通过。
 
-## Implemented design
+## CI 状态与下一步
 
-- CI has `preflight`, `prerequisites`, and `full` manual modes.
-- The build is split into prerequisite RPMs and GCC RPMs with artifact transfer.
-- Runtime/binutils/gcc core spec Releases are currently synchronized at 7.
-- GNU Make 4.3 source is SHA-256 locked and a new
-  `gcc12-toolset-make-4.3-1` spec exists.
-- `gcc12-toolset-toolchain` is a DTS-style meta package requiring runtime,
-  binutils, GCC, G++, and toolset Make.
-- GCC no longer has a runtime dependency on the system `make` package.
-- CMake is intentionally not in the core meta package.
-
-## Two latest failed runs
-
-### Run 30141719842 at commit fa5953d
-
-URL: https://github.com/hzqmwne/gcc12-toolset-el7/actions/runs/30141719842
-
-- Preflight, prerequisite RPM build, and the two-hour GCC RPM build succeeded.
-- The clean CentOS 7 install succeeded.
-- `tests/check-rpm-isolation.sh` succeeded, so the earlier RPM capability
-  false-positive is no longer the active blocker.
-- Verification then failed in `tests/check-abi.sh`:
-  `cc1plus: error while loading shared libraries: libisl.so.23`.
-- Cause: `check-abi.sh` invokes the absolute toolset `g++` without first
-  activating the SCL environment. `libisl.so.23` is deliberately private under
-  `/opt/gcc12-toolset/root/usr/lib/gcc/x86_64-redhat-linux/12.2.1`; the enable
-  script adds that directory to `LD_LIBRARY_PATH`.
-- Other GCC prerequisites do not expose the same symptom because GMP, MPFR,
-  MPC, and zlib come from system packages and normal loader paths, while
-  bootstrap libstdc++/libgcc are statically linked where configured. ISL is the
-  intentionally private, non-system shared dependency.
-- Under the repository's explicit SCL activation contract this points to a test
-  invocation bug, not evidence that all compiler packaging is invalid. If
-  direct absolute-path compiler use without activation were intended to be
-  supported, then the packaging/link configuration would need a RUNPATH or a
-  different private-library layout; that is not the current contract.
-
-Recommended correction: source `/opt/gcc12-toolset/enable full` near the start
-of `tests/check-abi.sh` before invoking the compiler. Keep the private ISL
-directory assertions in profile tests.
-
-### Run 30142368829 at commit 5e41bc0
-
-URL: https://github.com/hzqmwne/gcc12-toolset-el7/actions/runs/30142368829
-
-- Preflight succeeded.
-- The prerequisite job failed while building the new Make RPM; GCC did not run.
-- EL7's RPM `%configure` macro appended its own `/usr` prefix after the custom
-  argument. The log proves Make installed into
-  `BUILDROOT/gcc12-toolset-make-.../usr`, not the toolset prefix.
-- `%check` correctly failed because
-  `/opt/gcc12-toolset/root/usr/bin/make` did not exist.
-- The install also produces `include/gnumake.h`, which the current `%files`
-  list does not own and would become the next packaging error.
-
-Recommended correction in `gcc12-toolset-make.spec`:
-
-- call `./configure --prefix=%{toolset_prefix} --disable-nls` directly instead
-  of `%configure`;
-- add `%{toolset_prefix}/include/gnumake.h` to `%files`;
-- retain Make Release 1 because no successful/published Make RPM exists yet.
-
-## Next execution sequence
-
-1. Apply both corrections above with `apply_patch`.
-2. Run shell syntax checks, repository encoding/LF checks, `git diff --check`,
-   and local preflight when Python is available.
-3. Commit and push `main`.
-4. Dispatch `Build and Release` in `prerequisites` mode first. Inspect it once;
-   do not poll frequently.
-5. If prerequisites succeeds, dispatch one `full` run with `jobs=4`,
-   `free_disk=true`, and `trace=false`.
-6. Do not re-run failed jobs from either old run: they belong to older commits,
-   and the latest run has no valid prerequisite artifact.
-
-After the next milestone, replace this failure section with the new commit,
-run IDs, results, and remaining blocker rather than appending a full history.
+- Run `30188359733` 针对旧提交 `f9a4f98` 调度；它可验证 Make 修复，但不能作为 `2371bb7` 的证据。
+- 收到该运行结果后记录结论，但不要从它启动 full。
+- 对 `2371bb7` 依次调度 `prerequisites`，成功后调度一次 `full`，输入固定为
+  `jobs=4`、`free_disk=true`、`trace=false`。
+- full 必须确认 Make prefix/`gnumake.h`、前端不含 `NEEDED libisl.so`，以及不激活环境下的 ABI 测试。
