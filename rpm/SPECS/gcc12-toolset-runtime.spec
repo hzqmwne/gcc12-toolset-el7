@@ -1,6 +1,6 @@
 Name:           gcc12-toolset-runtime
 Version:        1.0
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Runtime launcher and filesystem layout for gcc12-toolset
 License:        MIT
 BuildArch:      noarch
@@ -64,6 +64,9 @@ install -m 0644 %{SOURCE5} %{buildroot}/opt/gcc12-toolset/enable-compat
 %files -n gcc12-toolset-toolchain
 
 %changelog
+* Sun Jul 26 2026 Toolset Builder <builder@localhost> - 1.0-8
+- Rebuild with statically linked GCC ISL
+
 * Sat Jul 25 2026 Toolset Builder <builder@localhost> - 1.0-7
 - Add the DTS-style toolchain meta package
 

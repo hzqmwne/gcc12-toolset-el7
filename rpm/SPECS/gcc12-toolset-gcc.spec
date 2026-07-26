@@ -8,7 +8,7 @@
 
 Name:           gcc12-toolset-gcc
 Version:        12.2.1
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Complete dual-ABI GCC 12 toolchain for CentOS 7
 License:        GPLv3+ and GPLv3+ with exceptions and GPLv2+ with exceptions
 URL:            https://gcc.gnu.org/
@@ -111,12 +111,12 @@ cd isl-build
   CXX=/usr/bin/g++ \
   CFLAGS='%{optflags} -fpic' \
   --prefix="$(cd .. && pwd)/isl-install" \
-  --enable-shared \
-  --disable-static
+  --disable-shared \
+  --enable-static
 make %{?_smp_mflags}
 make install
 cd ..
-export LD_LIBRARY_PATH="$(pwd)/isl-install/lib:%{binutils_libdir}"
+export LD_LIBRARY_PATH=%{binutils_libdir}
 
 ../configure \
   --prefix=%{toolset_prefix} \
@@ -154,7 +154,6 @@ export LD_LIBRARY_PATH="$(pwd)/isl-install/lib:%{binutils_libdir}"
 make %{?_smp_mflags} \
   LDFLAGS_FOR_TARGET='-Wl,-z,relro,-z,now' \
   profiledbootstrap
-cp -a isl-install/lib/libisl.so.23 gcc/
 
 # Build only the compiler and target libstdc++ a second time from the DTS
 # compatibility source view. This shares the installed GCC binaries while
@@ -197,12 +196,9 @@ make %{?_smp_mflags} all-gcc all-target-libgcc all-target-libstdc++-v3
 
 %install
 export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
-export LD_LIBRARY_PATH="$(pwd)/obj/isl-install/lib:%{binutils_libdir}"
+export LD_LIBRARY_PATH=%{binutils_libdir}
 cd obj
 make DESTDIR=%{buildroot} install
-install -d %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}
-install -m 0755 isl-install/lib/libisl.so.23 \
-  %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}/libisl.so.23
 find %{buildroot}%{toolset_prefix} -name '*.la' -delete
 rm -f %{buildroot}%{toolset_prefix}/share/info/dir
 
@@ -299,7 +295,7 @@ test -s files.compat
 
 %check
 export PATH=%{toolset_prefix}/bin:/usr/bin:/bin
-export LD_LIBRARY_PATH="$(pwd)/obj/isl-install/lib:%{binutils_libdir}"
+export LD_LIBRARY_PATH=%{binutils_libdir}
 test -x obj/gcc/xgcc
 obj/gcc/xgcc -Bobj/gcc -dumpfullversion | grep '^12\.2\.1$'
 test "$(obj/gcc/xgcc -Bobj/gcc -m32 -print-multi-directory)" = 32
@@ -314,7 +310,11 @@ test -r %{buildroot}%{toolset_prefix}/lib64/libubsan.so.1
 test -r %{buildroot}%{toolset_prefix}/lib/libubsan.so.1
 find %{buildroot}%{toolset_prefix} -name libstdc++_libbacktrace.a -print -quit \
   | grep -q .
-test -r %{buildroot}%{toolset_prefix}/lib/gcc/%{gcc_target}/%{version}/libisl.so.23
+for compiler in cc1 cc1plus lto1; do
+  compiler_path=%{buildroot}%{toolset_prefix}/libexec/gcc/%{gcc_target}/%{version}/$compiler
+  test -x "$compiler_path"
+  ! /usr/bin/readelf -d "$compiler_path" | grep -F 'libisl.so' >/dev/null
+done
 compat_header=$(find %{buildroot}/opt/gcc12-toolset/profiles/compat/include \
   -name c++config.h | head -n 1)
 test -n "$compat_header"
@@ -341,6 +341,9 @@ ar t %{buildroot}/opt/gcc12-toolset/profiles/compat/lib/gcc/%{gcc_target}/%{vers
 %files -n gcc12-toolset-libstdc++-compat -f obj/files.compat
 
 %changelog
+* Sun Jul 26 2026 Toolset Builder <builder@localhost> - 12.2.1-8
+- Statically link the private ISL prerequisite into GCC frontends
+
 * Sat Jul 25 2026 Toolset Builder <builder@localhost> - 12.2.1-7
 - Let the toolchain meta package, rather than the compiler, require GNU Make
 
