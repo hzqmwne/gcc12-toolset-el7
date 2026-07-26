@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`ebd85ea fix: add stacktrace backport context`
+- 当前 HEAD：`833f8da fix: generate stacktrace backport hunk`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -44,5 +44,6 @@
   输入现为自由文本，无范围校验；公共
   `ubuntu-24.04` runner 为 4 vCPU/16 GiB，默认值保留为 4，较高值会过度订阅而非合理加速。
 - Run `30206849625` 的 prerequisites 成功；Run `30206850982` 的 full 在旧手写 hunk 的 GCC `%prep` 失败。
-  后续：对 WSL 验证的补丁运行 preflight，提交推送并以默认输入重新调度 prerequisites 和 full。除非收到
-  明确发布请求，不创建或移动发布标签。
+  `833f8da` 已采用 WSL 严格验证的 `diff -u` hunk，并通过 preflight 与 `git diff --check`。Run
+  `30207334529`（prerequisites）和 Run `30207336504`（full）已针对该提交以默认输入启动；不要频繁轮询。
+  除非收到明确发布请求，不创建或移动发布标签。
