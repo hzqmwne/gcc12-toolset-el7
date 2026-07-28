@@ -32,11 +32,13 @@ jobs:
       - name: Check shell syntax
         run: |
           git ls-files -z '*.sh' 'rpm/SOURCES/*' \
+            | grep -z -E -v '\.(diff|patch)$' \
             | xargs -0 -r -n1 bash -n
 
       - name: Run ShellCheck
         run: |
           git ls-files -z '*.sh' 'rpm/SOURCES/*' \
+            | grep -z -E -v '\.(diff|patch)$' \
             | xargs -0 -r shellcheck --severity=error --shell=bash
 
       - name: Check Dockerfile

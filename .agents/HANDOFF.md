@@ -9,7 +9,7 @@
 
 - GitHub：`hzqmwne/gcc12-toolset-el7`
 - 分支：`main`
-- 当前 HEAD：`833f8da fix: generate stacktrace backport hunk`
+- 当前 HEAD：`4472b6f docs: record WSL patch validation`
 - `v1.0.0` 不可变。
 
 ## 当前设计与证据
@@ -45,5 +45,11 @@
   `ubuntu-24.04` runner 为 4 vCPU/16 GiB，默认值保留为 4，较高值会过度订阅而非合理加速。
 - Run `30206849625` 的 prerequisites 成功；Run `30206850982` 的 full 在旧手写 hunk 的 GCC `%prep` 失败。
   `833f8da` 已采用 WSL 严格验证的 `diff -u` hunk，并通过 preflight 与 `git diff --check`。Run
-  `30207334529`（prerequisites）和 Run `30207336504`（full）已针对该提交以默认输入启动；不要频繁轮询。
+  `30207334529`（prerequisites）和 Run `30207336504`（full）均已成功。
+- Push CI Run `30207359859`（`4472b6f`）只在 `Check shell syntax` 失败：`.github/workflows/ci.yml`
+  将所有 `rpm/SOURCES/*` 当作 Bash 传给 `bash -n`；新增的
+  `gcc12-stacktrace-max-size.patch` 是 unified diff，因而在 `From:` 第 1 行必然失败。WSL 已复现：
+  `.github/scripts/preflight.sh` 与 `git diff --check` 成功，而 CI 的精确命令失败。应将 CI 的
+  shell 检查和 ShellCheck 限制为脚本文件，或至少排除非脚本补丁；修复改为排除 `.diff` 和
+  `.patch` 文件。提交、推送后以默认输入手动启动 `full`；不要频繁轮询。
   除非收到明确发布请求，不创建或移动发布标签。
